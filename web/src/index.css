@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #0A0B0F;
+  --color-surface-1: #111318;
+  --color-surface-2: #1A1D24;
+  --color-surface-3: #22262F;
+  --color-ink: #F4F1EC;
+  --color-ink-muted: #8A8784;
+  --color-ink-faint: #3A3936;
+  --color-accent: #C9A84C;
+  --color-accent-dim: rgba(201, 168, 76, 0.12);
+  --color-accent-border: rgba(201, 168, 76, 0.2);
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-danger: #E5484D;
+  --color-danger-dim: rgba(229, 72, 77, 0.12);
+  --color-success: #30A46C;
+  --color-success-dim: rgba(48, 164, 108, 0.12);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --animate-fade-in: fadeIn 200ms ease-out both;
+  --animate-slide-up: slideUp 180ms ease-out both;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  min-height: 100vh;
+}
+
+#root { min-height: 100vh; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-ink-faint); border-radius: 3px; }
+
+/* Animations — ONLY these three */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-fade-in { animation: fadeIn 200ms ease-out both; }
+.animate-slide-up { animation: slideUp 180ms ease-out both; }
+.animate-cursor { animation: cursorBlink 1s step-end infinite; }
+
+/* Glass surface */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+}
+
+/* react-pdf overrides */
+.react-pdf__Page__canvas { max-width: 100% !important; height: auto !important; }
+
+::selection { background: var(--color-accent-dim); color: var(--color-accent); }

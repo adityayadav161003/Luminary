@@ -1,0 +1,108 @@
+# ==============================================================================
+# Luminary Platform .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment Variables & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ------------------------------------------------------------------------------
+# 2. Python (Backend)
+# ------------------------------------------------------------------------------
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database
+*.sqlite3
+*.db
+backend/luminary.db
+backend/luminary.db-journal
+
+# FAISS Vectors & Indexing
+backend/faiss_index/
+*.index
+*.faiss
+
+# IDE / Project files
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# ------------------------------------------------------------------------------
+# 3. Node.js / React (Frontend, Web, Mobile, Desktop)
+# ------------------------------------------------------------------------------
+# Dependencies
+node_modules/
+.npm
+.yarn
+.pnp.*
+
+# Build Outputs
+web/dist/
+frontend/dist/
+web/build/
+frontend/build/
+.next/
+out/
+.nuxt/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 4. Agent, AI & Analytics Tools
+# ------------------------------------------------------------------------------
+# Graphify
+graphify-out/
+.graphify/
+
+# Agents / IDE configs
+.agents/
+.cursor/
+.aider/
+.hermes/
+
+# ------------------------------------------------------------------------------
+# 5. OS Generated Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ------------------------------------------------------------------------------
+# 6. IDEs & Editors
+# ------------------------------------------------------------------------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

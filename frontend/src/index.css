@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ── Luminary Design Tokens ─────────────────────────────────── */
+@theme {
+  --color-bg-primary: #0A0B0F;
+  --color-bg-secondary: #111318;
+  --color-bg-tertiary: #1A1D24;
+  --color-bg-elevated: #22252E;
+  --color-text-primary: #F4F1EC;
+  --color-text-secondary: #9B9AA3;
+  --color-text-muted: #5F5E67;
+  --color-border-default: #2A2D3A;
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-accent: #D4A843;
+  --color-accent-dim: rgba(212, 168, 67, 0.15);
+  --color-accent-hover: #E0B84E;
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-danger: #E5484D;
+  --color-danger-dim: rgba(229, 72, 77, 0.15);
+  --color-success: #30A46C;
+  --color-success-dim: rgba(48, 164, 108, 0.15);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ── Glass Surface ──────────────────────────────────────────── */
+.glass-surface {
+  background: var(--color-surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.glass-surface-hover {
+  transition: background-color 150ms ease-out;
+}
+
+.glass-surface-hover:hover {
+  background: var(--color-surface-hover);
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 200ms ease-out both;
+}
+
+.animate-cursor-pulse {
+  animation: pulse-cursor 1.2s ease-in-out infinite;
+}
+
+/* ── PDF Viewer ─────────────────────────────────────────────── */
+.react-pdf__Page__canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.react-pdf__Page__textContent {
+  max-width: 100% !important;
+}
+
+/* ── Selection ──────────────────────────────────────────────── */
+::selection {
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+/* ── Progress Bar ───────────────────────────────────────────── */
+.upload-progress-bar {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
+  transition: width 200ms ease-out;
+}

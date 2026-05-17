@@ -1,0 +1,30 @@
+# Luminary Backend Dependencies (pinned)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-dotenv==1.0.1
+python-multipart==0.0.18
+
+# Database
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+
+# PDF Processing — bytes processed in-memory, never stored
+PyMuPDF==1.25.1
+
+# Embeddings — local model, no API calls
+sentence-transformers==3.3.1
+faiss-cpu==1.9.0.post1
+numpy==1.26.4
+
+# Retrieval
+rank-bm25==0.2.2
+
+# LLM — only query text transmitted, never PDF bytes
+openai==1.58.1
+
+# Auth — Clerk JWT verification
+PyJWT[crypto]==2.9.0
+cryptography==44.0.0
+
+# Schema
+pydantic==2.10.3
