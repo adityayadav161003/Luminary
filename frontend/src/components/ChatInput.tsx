@@ -169,12 +169,12 @@ export default function ChatInput() {
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary-fixed-dim/40 to-transparent"></div>
         </div>
 
-        <div className="flex justify-center mt-sm gap-lg">
-          <div className="flex items-center gap-xs opacity-40">
+        <div className="flex justify-center mt-4 gap-8">
+          <div className="flex items-center gap-2 opacity-40">
             <span className="material-symbols-outlined text-[14px]">security</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider">End-to-End Encrypted</span>
           </div>
-          <div className="flex items-center gap-xs opacity-40">
+          <div className="flex items-center gap-2 opacity-40">
             <span className="material-symbols-outlined text-[14px]">memory</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider">GPT-4 Turbo Context</span>
           </div>

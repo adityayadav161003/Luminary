@@ -49,8 +49,35 @@
   --color-on-tertiary: #2e3135;
   --color-on-error: #690005;
 
+  /* Custom Spacing scale for Tailwind v4 */
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+  --spacing-base: 4px;
+  --spacing-sm: 16px;
+  --spacing-gutter: 20px;
+  --spacing-margin-page: 24px;
+  --spacing-md: 24px;
+  --spacing-xs: 8px;
+
+  /* Custom Font Sizes scale for Tailwind v4 */
+  --font-size-label-caps: 12px;
+  --font-size-headline-md: 24px;
+  --font-size-code-sm: 13px;
+  --font-size-display-lg: 48px;
+  --font-size-headline-sm: 18px;
+  --font-size-body-md: 14px;
+  --font-size-body-lg: 16px;
+
+  /* Custom Font Families for Tailwind v4 */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-label-caps: 'Inter', sans-serif;
+  --font-headline-md: 'Inter', sans-serif;
+  --font-code-sm: 'JetBrains Mono', monospace;
+  --font-display-lg: 'Inter', sans-serif;
+  --font-headline-sm: 'Inter', sans-serif;
+  --font-body-md: 'Inter', sans-serif;
+  --font-body-lg: 'Inter', sans-serif;
 }
 
 * {
@@ -121,14 +148,23 @@ body {
   transition: width 150ms ease-out;
 }
 
-/* Animations */
-@keyframes float {
-  0% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-  50% { transform: translateY(-20px) translateX(10px); opacity: 0.6; }
-  100% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
+/* Background floating orb animations */
+@keyframes orbFloat1 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(120px, 90px) scale(1.15); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }
 
-.ambient-glow-anim {
-  filter: blur(80px);
-  animation: float 10s ease-in-out infinite;
+@keyframes orbFloat2 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-90px, -70px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.orb-1 {
+  animation: orbFloat1 25s infinite ease-in-out;
+}
+
+.orb-2 {
+  animation: orbFloat2 30s infinite ease-in-out;
 }

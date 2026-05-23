@@ -169,7 +169,7 @@ export default function DropZone() {
       onDragLeave={onDragLeave}
       onClick={() => state !== 'uploading' && fileRef.current?.click()}
       className={`
-        group relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-lg transition-all cursor-pointer text-center
+        group relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 transition-all cursor-pointer text-center
         ${state === 'idle' ? 'border-outline-variant/30 bg-surface-container-lowest/50 hover:bg-primary/5 hover:border-primary/40' : ''}
         ${state === 'dragging' ? 'border-primary/50 bg-primary/10' : ''}
         ${state === 'uploading' ? 'border-outline-variant/30 bg-[#161B24]' : ''}
@@ -181,21 +181,21 @@ export default function DropZone() {
 
       {state === 'idle' && (
         <>
-          <span className="material-symbols-outlined text-primary-fixed-dim mb-xs group-hover:scale-110 transition-transform text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>cloud_upload</span>
-          <p className="text-body-md font-semibold text-primary-container">Upload Document</p>
+          <span className="material-symbols-outlined text-primary-fixed-dim mb-2 group-hover:scale-110 transition-transform text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>cloud_upload</span>
+          <p className="text-sm font-semibold text-primary-container">Upload Document</p>
           <p className="text-[11px] text-on-surface-variant mt-1 font-semibold">PDF up to 50MB</p>
         </>
       )}
 
       {state === 'dragging' && (
         <>
-          <span className="material-symbols-outlined text-primary animate-bounce mb-xs text-[28px]">cloud_upload</span>
-          <p className="text-body-md font-semibold text-primary">Release to drop file</p>
+          <span className="material-symbols-outlined text-primary animate-bounce mb-2 text-[28px]">cloud_upload</span>
+          <p className="text-sm font-semibold text-primary">Release to drop file</p>
         </>
       )}
 
       {state === 'uploading' && (
-        <div className="w-full space-y-2 py-xs">
+        <div className="w-full space-y-2 py-2">
           <div className="flex justify-between items-center text-xs">
             <span className="text-[#e3e2e5] font-semibold truncate max-w-[180px]">{truncate(uploadingFile, 24)}</span>
             <span className="text-primary-fixed-dim font-bold">{progressPercent}%</span>
@@ -207,17 +207,17 @@ export default function DropZone() {
       )}
 
       {state === 'success' && (
-        <div className="flex flex-col items-center gap-1 text-center py-xs">
+        <div className="flex flex-col items-center gap-1 text-center py-2">
           <span className="material-symbols-outlined text-primary-fixed-dim text-[28px]">check_circle</span>
-          <span className="text-body-md text-primary font-semibold">Uploaded Successfully</span>
+          <span className="text-sm text-primary font-semibold">Uploaded Successfully</span>
           <span className="text-[10px] text-on-surface-variant font-mono truncate max-w-[180px]">{truncate(successFile, 24)}</span>
         </div>
       )}
 
       {state === 'error' && (
-        <div className="flex flex-col items-center gap-1 text-center py-xs">
+        <div className="flex flex-col items-center gap-1 text-center py-2">
           <span className="material-symbols-outlined text-error text-[28px]">error</span>
-          <span className="text-body-md text-error font-semibold">Upload Failed</span>
+          <span className="text-sm text-error font-semibold">Upload Failed</span>
           <span className="text-[10px] text-error font-mono max-w-full truncate">{error}</span>
         </div>
       )}

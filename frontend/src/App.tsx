@@ -55,6 +55,17 @@ function Workspace() {
 
   const [activeView, setActiveView] = useState<'intelligence' | 'settings'>('intelligence');
 
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      setMousePos({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   const handleSignOut = () => {
     signOut();
   };
@@ -78,71 +89,71 @@ function Workspace() {
   return (
     <div className="h-screen flex overflow-hidden bg-[#0A0B0D] font-sans">
       {/* ── Sidebar Navigation Shell ── */}
-      <aside className="hidden md:flex h-screen w-64 flex-shrink-0 bg-surface-container border-r border-outline-variant/20 flex-col py-md z-40">
-        <div className="px-sm mb-lg text-left">
-          <div className="flex items-center gap-xs">
+      <aside className="hidden md:flex h-screen w-64 flex-shrink-0 bg-surface-container border-r border-outline-variant/20 flex-col py-6 z-40">
+        <div className="px-4 mb-8 text-left">
+          <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
-            <span className="text-headline-sm font-bold text-primary">Luminary</span>
+            <span className="text-lg font-bold text-primary">Luminary</span>
           </div>
-          <p className="text-label-caps text-on-surface-variant mt-1 opacity-60 font-semibold uppercase tracking-wider">Premium RAG Pipeline</p>
+          <p className="text-xs uppercase tracking-wider text-on-surface-variant mt-1.5 opacity-60 font-semibold">Premium RAG Pipeline</p>
         </div>
         
-        <nav className="flex-1 px-xs flex flex-col gap-1">
+        <nav className="flex-1 px-2 flex flex-col gap-1">
           <button 
             onClick={() => setActiveView('intelligence')}
-            className={`flex items-center gap-sm px-sm py-xs hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'intelligence' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+            className={`flex items-center gap-3 px-4 py-2 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'intelligence' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
           >
             <span className="material-symbols-outlined">psychology</span>
-            <span className="text-label-caps font-semibold">Intelligence</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">Intelligence</span>
           </button>
           
           <button 
             onClick={() => setActiveView('intelligence')}
-            className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+            className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
           >
             <span className="material-symbols-outlined">description</span>
-            <span className="text-label-caps font-semibold">Documents</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">Documents</span>
           </button>
           
           <button 
             onClick={() => setActiveView('intelligence')}
-            className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+            className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
           >
             <span className="material-symbols-outlined">history</span>
-            <span className="text-label-caps font-semibold">History</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">History</span>
           </button>
           
           <button 
             onClick={() => setActiveView('settings')}
-            className={`flex items-center gap-sm px-sm py-xs hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'settings' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+            className={`flex items-center gap-3 px-4 py-2 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'settings' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
           >
             <span className="material-symbols-outlined">settings</span>
-            <span className="text-label-caps font-semibold">Settings</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">Settings</span>
           </button>
         </nav>
         
-        <div className="px-sm mt-auto flex flex-col gap-xs border-t border-outline-variant/10 pt-md">
+        <div className="px-4 mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
           <button 
             onClick={handleNewAnalysis}
-            className="w-full bg-primary-container text-on-primary-container font-bold py-sm px-md rounded transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-xs cursor-pointer text-label-caps shadow-lg shadow-primary-container/10"
+            className="w-full bg-primary-container text-on-primary-container font-bold py-2.5 px-4 rounded transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider shadow-lg shadow-primary-container/10"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             New Analysis
           </button>
           
-          <div className="mt-md flex flex-col gap-1">
+          <div className="mt-6 flex flex-col gap-1">
             <a 
               href="https://fastapi.tiangolo.com" 
               target="_blank" 
               rel="noreferrer" 
-              className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:text-primary transition-colors text-label-caps font-semibold"
+              className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold"
             >
               <span className="material-symbols-outlined text-[18px]">help_outline</span>
               Help
             </a>
             <button 
               onClick={handleSignOut}
-              className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:text-error transition-colors text-label-caps font-semibold cursor-pointer text-left w-full rounded-md"
+              className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:text-error transition-colors text-xs uppercase tracking-wider font-semibold cursor-pointer text-left w-full rounded-md"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
               Logout
@@ -150,14 +161,14 @@ function Workspace() {
           </div>
         </div>
       </aside>
-
+ 
       {/* ── Main Workspace Content Area ── */}
       <main className="flex-1 h-screen flex flex-col relative overflow-hidden md:ml-0">
         {/* Top Context Header */}
-        <header className="h-16 flex items-center justify-between px-lg glass-panel bg-surface/60 border-b border-outline-variant/10 z-30 flex-shrink-0">
-          <div className="flex items-center gap-sm">
+        <header className="h-16 flex items-center justify-between px-6 md:px-8 glass-panel bg-surface/60 border-b border-outline-variant/10 z-30 flex-shrink-0">
+          <div className="flex items-center gap-3">
             <div className="flex flex-col text-left">
-              <h1 className="text-body-md font-bold text-on-surface tracking-tight">
+              <h1 className="text-sm md:text-base font-bold text-on-surface tracking-tight">
                 {activeView === 'intelligence' ? 'Active Workspace' : 'Account Settings'}
               </h1>
               <p className="text-[10px] text-on-surface-variant font-semibold uppercase tracking-widest opacity-50">
@@ -165,8 +176,8 @@ function Workspace() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-md">
-            <div className="flex items-center gap-xs px-sm py-1 rounded-full bg-surface-container-high border border-outline-variant/30">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/30">
               <div className="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse"></div>
               <span className="text-[10px] text-primary-fixed-dim font-bold uppercase tracking-wider">Engine Ready</span>
             </div>
@@ -181,7 +192,7 @@ function Workspace() {
             )}
           </div>
         </header>
-
+ 
         {/* Dynamic Content Canvas */}
         <div className="flex-1 flex overflow-hidden">
           {activeView === 'settings' ? (
@@ -190,14 +201,14 @@ function Workspace() {
             <div className="flex-1 flex overflow-hidden">
               {/* Context Drawer (History/Docs) */}
               <aside className="hidden md:flex w-80 border-r border-outline-variant/10 bg-surface-container-low flex-col flex-shrink-0">
-                <div className="p-md border-b border-outline-variant/10">
-                  <h2 className="text-label-caps font-semibold text-on-surface-variant mb-sm uppercase tracking-wider">Document Repository</h2>
+                <div className="p-6 border-b border-outline-variant/10">
+                  <h2 className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-4">Document Repository</h2>
                   <DropZone />
                 </div>
                 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-sm flex flex-col">
-                  <div className="flex flex-col gap-xs flex-1 min-h-0">
-                    <div className="flex items-center justify-between px-xs mb-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col">
+                  <div className="flex flex-col gap-2 flex-1 min-h-0">
+                    <div className="flex items-center justify-between px-2 mb-1">
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Recent Files</span>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-primary">filter_list</span>
                     </div>
@@ -205,7 +216,7 @@ function Workspace() {
                     <div className="flex-1 overflow-y-auto min-h-0">
                       <DocumentList />
                     </div>
-
+ 
                     <div className="border-t border-outline-variant/10 pt-2 min-h-[140px] flex-shrink-0 bg-surface-container-low">
                       <SessionSidebar />
                     </div>
@@ -217,8 +228,14 @@ function Workspace() {
               <section className="flex-1 flex overflow-hidden relative bg-[#0A0B0D]">
                 {/* Background Atmospheric Glow */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                  <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]"></div>
-                  <div className="absolute bottom-[10%] -left-[5%] w-[400px] h-[400px] rounded-full bg-primary-container/3 blur-[100px]"></div>
+                  <div className="orb-1 absolute -top-[10%] -right-[10%] w-[600px] h-[600px] rounded-full bg-primary-container/4 blur-[130px]" />
+                  <div className="orb-2 absolute bottom-[10%] -left-[5%] w-[500px] h-[500px] rounded-full bg-primary-fixed-dim/2 blur-[120px]" />
+                  <div 
+                    className="absolute inset-0 opacity-40 transition-all duration-75"
+                    style={{
+                      background: `radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, rgba(250, 189, 0, 0.08) 0%, transparent 45%)`
+                    }}
+                  />
                 </div>
 
                 <div className="flex-1 flex overflow-hidden relative z-10">
