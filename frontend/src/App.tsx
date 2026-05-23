@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, SignedIn, SignedOut, RedirectToSignIn, useAuth, useUser } from '@clerk/clerk-react';
 import { dark } from '@clerk/themes';
 import { useStore } from './store';
@@ -9,6 +9,7 @@ import PDFViewer from './components/PDFViewer';
 import ChatPanel from './components/ChatPanel';
 import SessionSidebar from './components/SessionSidebar';
 import LandingPage from './pages/LandingPage';
+import SettingsPanel from './components/SettingsPanel';
 import type { ViewTab } from './types';
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
@@ -48,11 +49,19 @@ function Workspace() {
   const clearDocSelection = useStore((s) => s.clearDocSelection);
   const viewerDocId = useStore((s) => s.viewerDocId);
   const setViewerDoc = useStore((s) => s.setViewerDoc);
+  const createSession = useStore((s) => s.createSession);
   const { signOut } = useAuth();
   const { user } = useUser();
 
+  const [activeView, setActiveView] = useState<'intelligence' | 'settings'>('intelligence');
+
   const handleSignOut = () => {
     signOut();
+  };
+
+  const handleNewAnalysis = () => {
+    createSession(selectedDocIds);
+    setActiveView('intelligence');
   };
 
   const handleResetDocIdsSelection = (e: React.MouseEvent) => {
@@ -63,87 +72,194 @@ function Workspace() {
     }
   };
 
+  const pdfUrl = useStore((state) => state.pdfUrls[state.selectedDocIds[0]]);
+  const isDocSelected = !!pdfUrl;
+
   return (
-    <div className="h-screen flex overflow-hidden bg-[#080A0F] font-sans">
-      {/* ── Desktop Layout ──────────────────────────────────── */}
-      <div className="hidden md:flex flex-1 overflow-hidden">
-        {/* Left Sidebar */}
-        <aside className="w-72 flex-shrink-0 flex flex-col border-r border-white/[0.06] bg-[#0F1218]">
-          {/* Logo Row */}
-          <div className="px-5 py-4 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-[#F0EDE8] tracking-wide">
-                ✦ Luminary<span className="text-[#C8A84B] ml-0.5">.</span>
-              </span>
+    <div className="h-screen flex overflow-hidden bg-[#0A0B0D] font-sans">
+      {/* ── Sidebar Navigation Shell ── */}
+      <aside className="hidden md:flex h-screen w-64 flex-shrink-0 bg-surface-container border-r border-outline-variant/20 flex-col py-md z-40">
+        <div className="px-sm mb-lg text-left">
+          <div className="flex items-center gap-xs">
+            <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
+            <span className="text-headline-sm font-bold text-primary">Luminary</span>
+          </div>
+          <p className="text-label-caps text-on-surface-variant mt-1 opacity-60 font-semibold uppercase tracking-wider">Premium RAG Pipeline</p>
+        </div>
+        
+        <nav className="flex-1 px-xs flex flex-col gap-1">
+          <button 
+            onClick={() => setActiveView('intelligence')}
+            className={`flex items-center gap-sm px-sm py-xs hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'intelligence' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+          >
+            <span className="material-symbols-outlined">psychology</span>
+            <span className="text-label-caps font-semibold">Intelligence</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveView('intelligence')}
+            className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+          >
+            <span className="material-symbols-outlined">description</span>
+            <span className="text-label-caps font-semibold">Documents</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveView('intelligence')}
+            className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+          >
+            <span className="material-symbols-outlined">history</span>
+            <span className="text-label-caps font-semibold">History</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveView('settings')}
+            className={`flex items-center gap-sm px-sm py-xs hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'settings' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+          >
+            <span className="material-symbols-outlined">settings</span>
+            <span className="text-label-caps font-semibold">Settings</span>
+          </button>
+        </nav>
+        
+        <div className="px-sm mt-auto flex flex-col gap-xs border-t border-outline-variant/10 pt-md">
+          <button 
+            onClick={handleNewAnalysis}
+            className="w-full bg-primary-container text-on-primary-container font-bold py-sm px-md rounded transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-xs cursor-pointer text-label-caps shadow-lg shadow-primary-container/10"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New Analysis
+          </button>
+          
+          <div className="mt-md flex flex-col gap-1">
+            <a 
+              href="https://fastapi.tiangolo.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:text-primary transition-colors text-label-caps font-semibold"
+            >
+              <span className="material-symbols-outlined text-[18px]">help_outline</span>
+              Help
+            </a>
+            <button 
+              onClick={handleSignOut}
+              className="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:text-error transition-colors text-label-caps font-semibold cursor-pointer text-left w-full rounded-md"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              Logout
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main Workspace Content Area ── */}
+      <main className="flex-1 h-screen flex flex-col relative overflow-hidden md:ml-0">
+        {/* Top Context Header */}
+        <header className="h-16 flex items-center justify-between px-lg glass-panel bg-surface/60 border-b border-outline-variant/10 z-30 flex-shrink-0">
+          <div className="flex items-center gap-sm">
+            <div className="flex flex-col text-left">
+              <h1 className="text-body-md font-bold text-on-surface tracking-tight">
+                {activeView === 'intelligence' ? 'Active Workspace' : 'Account Settings'}
+              </h1>
+              <p className="text-[10px] text-on-surface-variant font-semibold uppercase tracking-widest opacity-50">
+                {activeView === 'intelligence' ? 'Cluster-04 // Neural-Link' : 'Luminary Profile // Configuration'}
+              </p>
             </div>
-            {/* Status Chip */}
-            <div className="mt-2 text-xs text-[#6B7280] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C8A84B]" />
-              {selectedDocIds.length} doc{selectedDocIds.length !== 1 ? 's' : ''} active
+          </div>
+          <div className="flex items-center gap-md">
+            <div className="flex items-center gap-xs px-sm py-1 rounded-full bg-surface-container-high border border-outline-variant/30">
+              <div className="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse"></div>
+              <span className="text-[10px] text-primary-fixed-dim font-bold uppercase tracking-wider">Engine Ready</span>
             </div>
-          </div>
-
-          {/* DropZone component */}
-          <DropZone />
-
-          {/* DocumentList component */}
-          <div className="flex-1 overflow-y-auto">
-            <DocumentList />
-          </div>
-
-          <div className="border-t border-white/[0.06]" />
-
-          {/* Sessions Section */}
-          <div className="h-[200px]">
-            <SessionSidebar />
-          </div>
-
-          {/* Bottom user row */}
-          {user && (
-            <div className="border-t border-white/[0.06] p-3.5 flex items-center gap-2.5 bg-black/15">
-              <div className="w-7 h-7 rounded-full bg-[#C8A84B]/20 text-[#C8A84B] flex items-center justify-center text-xs font-semibold">
-                {user.firstName?.[0] || user.emailAddresses[0]?.emailAddress[0]?.toUpperCase() || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-[#F0EDE8] truncate">
-                  {user.firstName || user.emailAddresses[0]?.emailAddress.split('@')[0]}
-                </p>
-                <p className="text-[10px] text-[#6B7280] truncate">
-                  {user.emailAddresses[0]?.emailAddress}
-                </p>
-              </div>
-              <button 
-                onClick={handleSignOut} 
-                className="text-[10px] font-bold text-[#6B7280] hover:text-[#EF4444] transition-colors duration-150 cursor-pointer"
+            {user && (
+              <div 
+                onClick={() => setActiveView('settings')}
+                className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center border border-white/10 shadow-lg cursor-pointer text-[10px] font-bold text-on-primary-container"
+                title="View Settings"
               >
-                Sign out
-              </button>
+                {user.firstName?.[0] || 'AD'}
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Dynamic Content Canvas */}
+        <div className="flex-1 flex overflow-hidden">
+          {activeView === 'settings' ? (
+            <SettingsPanel />
+          ) : (
+            <div className="flex-1 flex overflow-hidden">
+              {/* Context Drawer (History/Docs) */}
+              <aside className="hidden md:flex w-80 border-r border-outline-variant/10 bg-surface-container-low flex-col flex-shrink-0">
+                <div className="p-md border-b border-outline-variant/10">
+                  <h2 className="text-label-caps font-semibold text-on-surface-variant mb-sm uppercase tracking-wider">Document Repository</h2>
+                  <DropZone />
+                </div>
+                
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-sm flex flex-col">
+                  <div className="flex flex-col gap-xs flex-1 min-h-0">
+                    <div className="flex items-center justify-between px-xs mb-1">
+                      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Recent Files</span>
+                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-primary">filter_list</span>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <DocumentList />
+                    </div>
+
+                    <div className="border-t border-outline-variant/10 pt-2 min-h-[140px] flex-shrink-0 bg-surface-container-low">
+                      <SessionSidebar />
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              {/* RAG Workspace Area (Chat & PDF side by side) */}
+              <section className="flex-1 flex overflow-hidden relative bg-[#0A0B0D]">
+                {/* Background Atmospheric Glow */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                  <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]"></div>
+                  <div className="absolute bottom-[10%] -left-[5%] w-[400px] h-[400px] rounded-full bg-primary-container/3 blur-[100px]"></div>
+                </div>
+
+                <div className="flex-1 flex overflow-hidden relative z-10">
+                  {isDocSelected ? (
+                    <div className="flex-1 flex overflow-hidden">
+                      {/* Left: PDF Viewer */}
+                      <div className="flex-1 border-r border-outline-variant/10 overflow-hidden">
+                        <PDFViewer />
+                      </div>
+                      {/* Right: Chat Panel */}
+                      <div className="w-[420px] flex-shrink-0 overflow-hidden">
+                        <ChatPanel />
+                      </div>
+                    </div>
+                  ) : (
+                    // Chat only (Full Width)
+                    <div className="flex-1 overflow-hidden">
+                      <ChatPanel />
+                    </div>
+                  )}
+                </div>
+              </section>
             </div>
           )}
-        </aside>
+        </div>
+      </main>
 
-        {/* Center Panel (PDF Viewer) */}
-        <main className="flex-1 flex flex-col bg-[#080A0F] overflow-hidden">
-          <PDFViewer />
-        </main>
-
-        {/* Right Panel (Chat Workspace) */}
-        <aside className="w-[380px] flex-shrink-0 flex flex-col border-l border-white/[0.06] bg-[#0F1218]">
-          <ChatPanel />
-        </aside>
-      </div>
-
-      {/* ── Mobile Layout ───────────────────────────────────── */}
+      {/* ── Mobile Layout ── */}
       <div className="flex md:hidden flex-col flex-1 overflow-hidden">
         {/* Brand / Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#0F1218]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-[#0F1218] flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#F0EDE8]">✦ Luminary<span className="text-[#C8A84B]">.</span></span>
+            <span className="text-sm font-bold text-primary flex items-center gap-xs">
+              <span className="material-symbols-outlined text-[16px]">flare</span>
+              Luminary
+            </span>
           </div>
           {user && (
             <button 
               onClick={handleSignOut} 
-              className="text-xs text-[#6B7280] hover:text-[#EF4444] transition-colors cursor-pointer"
+              className="text-xs text-on-surface-variant hover:text-error transition-colors cursor-pointer font-semibold"
             >
               Sign out
             </button>
@@ -151,14 +267,16 @@ function Workspace() {
         </div>
 
         {/* Tab Viewport */}
-        <div className="flex-1 overflow-hidden bg-[#080A0F]">
+        <div className="flex-grow overflow-hidden bg-[#0A0B0D]">
           {activeTab === 'documents' && (
             <div className="h-full flex flex-col overflow-hidden">
-              <DropZone />
+              <div className="p-3 border-b border-outline-variant/10">
+                <DropZone />
+              </div>
               <div className="flex-1 overflow-y-auto">
                 <DocumentList />
               </div>
-              <div className="h-[180px] border-t border-white/[0.06]">
+              <div className="h-[180px] border-t border-outline-variant/10 bg-surface-container-low">
                 <SessionSidebar />
               </div>
             </div>
@@ -168,11 +286,11 @@ function Workspace() {
             <div className="h-full flex flex-col relative">
               {selectedDocIds.length > 1 && (
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#161B24] border border-white/[0.08] text-xs font-semibold text-white shadow-xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-outline-variant/20 text-xs font-semibold text-white shadow-xl">
                     Chatting with {selectedDocIds.length} documents
                     <button 
                       onClick={handleResetDocIdsSelection}
-                      className="ml-1 p-0.5 rounded-full hover:bg-white/10 text-[#6B7280] hover:text-white transition-colors cursor-pointer"
+                      className="ml-1 p-0.5 rounded-full hover:bg-white/10 text-on-surface-variant hover:text-white transition-colors cursor-pointer"
                       title="Reset selections"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -188,20 +306,116 @@ function Workspace() {
         </div>
 
         {/* Bottom tab bar */}
-        <nav className="flex border-t border-white/[0.06] bg-[#0F1218] pb-safe">
+        <nav className="flex border-t border-outline-variant/20 bg-surface-container pb-safe flex-shrink-0">
           {tabs.map((tab) => (
             <button 
               key={tab.key} 
               onClick={() => setActiveTab(tab.key)} 
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors duration-150 cursor-pointer ${activeTab === tab.key ? 'text-[#C8A84B] font-semibold' : 'text-[#6B7280]'}`}
+              className={`flex-grow flex flex-col items-center gap-1 py-2.5 transition-colors duration-150 cursor-pointer ${activeTab === tab.key ? 'text-primary font-bold' : 'text-on-surface-variant'}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} /></svg>
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">{tab.label}</span>
             </button>
           ))}
         </nav>
       </div>
     </div>
+  );
+}
+
+function MainRoutes() {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/app" element={<ProtectedRoute><Workspace /></ProtectedRoute>} />
+      <Route 
+        path="/sign-in/*" 
+        element={
+          <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#e3e2e5] font-sans relative selection:bg-primary/30">
+            {/* Header */}
+            <header className="w-full border-b border-outline-variant/30 bg-surface/60 backdrop-blur-xl z-20">
+              <div className="flex justify-between items-center w-full px-gutter max-w-7xl mx-auto h-16">
+                <div 
+                  className="text-headline-sm font-bold text-primary-container tracking-tighter flex items-center gap-xs cursor-pointer"
+                  onClick={() => navigate('/')}
+                >
+                  <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
+                  Luminary
+                </div>
+                <button 
+                  onClick={() => navigate('/')} 
+                  className="bg-primary-container text-on-primary-container px-md py-xs rounded-lg font-bold text-body-md hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+                >
+                  Home
+                </button>
+              </div>
+            </header>
+            
+            {/* Main Auth Card Area */}
+            <main className="flex-1 relative flex items-center justify-center pt-16 pb-12 z-10 overflow-hidden">
+              <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="ambient-glow-anim absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full"></div>
+                <div className="ambient-glow-anim absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-primary/5 rounded-full" style={{ animationDelay: '-5s' }}></div>
+              </div>
+              <div className="relative z-10 w-full flex justify-center">
+                <SignIn routing="path" path="/sign-in" forceRedirectUrl="/app" signUpUrl="/sign-up" />
+              </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-md z-20 text-center flex items-center justify-center gap-xs">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified_user</span>
+              <span className="text-xs text-on-surface-variant font-medium">Secure AES-256 encrypted authentication</span>
+            </footer>
+          </div>
+        } 
+      />
+      <Route 
+        path="/sign-up/*" 
+        element={
+          <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#e3e2e5] font-sans relative selection:bg-primary/30">
+            {/* Header */}
+            <header className="w-full border-b border-outline-variant/30 bg-surface/60 backdrop-blur-xl z-20">
+              <div className="flex justify-between items-center w-full px-gutter max-w-7xl mx-auto h-16">
+                <div 
+                  className="text-headline-sm font-bold text-primary-container tracking-tighter flex items-center gap-xs cursor-pointer"
+                  onClick={() => navigate('/')}
+                >
+                  <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
+                  Luminary
+                </div>
+                <button 
+                  onClick={() => navigate('/')} 
+                  className="bg-primary-container text-on-primary-container px-md py-xs rounded-lg font-bold text-body-md hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+                >
+                  Home
+                </button>
+              </div>
+            </header>
+
+            {/* Main Auth Card Area */}
+            <main className="flex-1 relative flex items-center justify-center pt-16 pb-12 z-10 overflow-hidden">
+              <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="ambient-glow-anim absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full"></div>
+                <div className="ambient-glow-anim absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-primary/5 rounded-full" style={{ animationDelay: '-5s' }}></div>
+              </div>
+              <div className="relative z-10 w-full flex justify-center">
+                <SignUp routing="path" path="/sign-up" forceRedirectUrl="/app" signInUrl="/sign-in" />
+              </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-md z-20 text-center flex items-center justify-center gap-xs">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified_user</span>
+              <span className="text-xs text-on-surface-variant font-medium">Secure AES-256 encrypted authentication</span>
+            </footer>
+          </div>
+        } 
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
@@ -250,40 +464,32 @@ export default function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_KEY} appearance={{ baseTheme: dark }}>
+    <ClerkProvider 
+      publishableKey={CLERK_KEY} 
+      appearance={{ 
+        baseTheme: dark,
+        variables: {
+          colorPrimary: '#fabd00',
+          colorBackground: '#1f2022',
+          colorText: '#e3e2e5',
+          colorInputBackground: '#1b1c1e',
+          colorInputText: '#e3e2e5',
+          colorTextSecondary: '#d4c5ab',
+          colorBorder: '#4f4632',
+        }
+      }}
+    >
       <BrowserRouter>
         {toast && (
-          <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161B24] backdrop-blur-md shadow-2xl animate-fade-in border-[#EF4444]/30">
+          <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-surface-container-high backdrop-blur-md shadow-2xl animate-fade-in border-[#EF4444]/30">
             <svg className="w-4 h-4 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
-            <span className="text-xs font-semibold text-[#F0EDE8]">{toast.message}</span>
+            <span className="text-xs font-semibold text-[#e3e2e5]">{toast.message}</span>
           </div>
         )}
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<ProtectedRoute><Workspace /></ProtectedRoute>} />
-          <Route 
-            path="/sign-in/*" 
-            element={
-              <div className="h-screen flex items-center justify-center bg-[#080A0F]">
-                <SignIn routing="path" path="/sign-in" forceRedirectUrl="/app" signUpUrl="/sign-up" />
-              </div>
-            } 
-          />
-          <Route 
-            path="/sign-up/*" 
-            element={
-              <div className="h-screen flex items-center justify-center bg-[#080A0F]">
-                <SignUp routing="path" path="/sign-up" forceRedirectUrl="/app" signInUrl="/sign-in" />
-              </div>
-            } 
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <MainRoutes />
       </BrowserRouter>
     </ClerkProvider>
   );
 }
-
-

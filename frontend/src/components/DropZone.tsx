@@ -1,8 +1,3 @@
-/**
- * DropZone — Drag-and-drop PDF upload with progress tracking.
- * Features a premium dark-glass design with state transitions (idle, dragging, uploading, success, error).
- */
-
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useStore } from '../store';
@@ -31,16 +26,15 @@ export default function DropZone() {
       setSuccessFile('');
       setUploadingFile(file.name);
 
-      // File validation BEFORE upload
       if (file.type !== 'application/pdf') {
         setState('error');
         setError('Only PDF files are supported');
         return;
       }
 
-      if (file.size > 20 * 1024 * 1024) {
+      if (file.size > 50 * 1024 * 1024) {
         setState('error');
-        setError('File too large. Max 20MB');
+        setError('File too large. Max 50MB');
         return;
       }
 
@@ -81,7 +75,6 @@ export default function DropZone() {
               setState('success');
               setSuccessFile(result.filename);
 
-              // Generate a local object URL to render in PDFViewer
               const localUrl = URL.createObjectURL(file);
               addPdfUrl(result.doc_id, localUrl);
 
@@ -102,7 +95,7 @@ export default function DropZone() {
               setViewerDoc(result.doc_id, result.page_count);
 
               setTimeout(() => setState('idle'), 2500);
-            } catch (err) {
+            } catch {
               setState('error');
               setError('Invalid response from server');
             }
@@ -164,7 +157,6 @@ export default function DropZone() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  // Truncate helper
   const truncate = (name: string, max: number) => {
     if (name.length <= max) return name;
     return name.slice(0, max) + '...';
@@ -172,72 +164,61 @@ export default function DropZone() {
 
   return (
     <div
-      id="upload-dropzone"
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onClick={() => state !== 'uploading' && fileRef.current?.click()}
       className={`
-        rounded-xl border border-dashed p-5 mx-3 mt-3 
-        transition-all duration-150 cursor-pointer flex flex-col items-center justify-center gap-2
-        ${state === 'idle' ? 'border-white/[0.08] hover:border-[#C8A84B]/40 hover:bg-[#C8A84B]/[0.03]' : ''}
-        ${state === 'dragging' ? 'border-[#C8A84B]/60 bg-[#C8A84B]/[0.06]' : ''}
-        ${state === 'uploading' ? 'border-white/[0.08] bg-[#161B24]' : ''}
-        ${state === 'success' ? 'border-[#10B981]/40 bg-[#10B981]/[0.03]' : ''}
-        ${state === 'error' ? 'border-[#EF4444]/40 bg-[#EF4444]/[0.03]' : ''}
+        group relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-lg transition-all cursor-pointer text-center
+        ${state === 'idle' ? 'border-outline-variant/30 bg-surface-container-lowest/50 hover:bg-primary/5 hover:border-primary/40' : ''}
+        ${state === 'dragging' ? 'border-primary/50 bg-primary/10' : ''}
+        ${state === 'uploading' ? 'border-outline-variant/30 bg-[#161B24]' : ''}
+        ${state === 'success' ? 'border-primary-fixed-dim/40 bg-primary-fixed-dim/5' : ''}
+        ${state === 'error' ? 'border-error/40 bg-error/5' : ''}
       `}
     >
       <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={onFileSelect} />
 
       {state === 'idle' && (
         <>
-          {/* arrow-up-from-bracket icon */}
-          <svg className="w-5 h-5 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-          <span className="text-xs text-[#6B7280]">Drop PDF here or click to browse</span>
-          <span className="text-[10px] text-[#374151]">Max 20MB</span>
+          <span className="material-symbols-outlined text-primary-fixed-dim mb-xs group-hover:scale-110 transition-transform text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>cloud_upload</span>
+          <p className="text-body-md font-semibold text-primary-container">Upload Document</p>
+          <p className="text-[11px] text-on-surface-variant mt-1 font-semibold">PDF up to 50MB</p>
         </>
       )}
 
       {state === 'dragging' && (
         <>
-          <svg className="w-5 h-5 text-[#C8A84B] animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-          <span className="text-xs text-[#C8A84B] font-medium">Release to upload</span>
+          <span className="material-symbols-outlined text-primary animate-bounce mb-xs text-[28px]">cloud_upload</span>
+          <p className="text-body-md font-semibold text-primary">Release to drop file</p>
         </>
       )}
 
       {state === 'uploading' && (
-        <div className="w-full space-y-2">
+        <div className="w-full space-y-2 py-xs">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-[#F0EDE8] font-medium">{truncate(uploadingFile, 24)}</span>
-            <span className="text-[#C8A84B] font-mono font-bold">{progressPercent}%</span>
+            <span className="text-[#e3e2e5] font-semibold truncate max-w-[180px]">{truncate(uploadingFile, 24)}</span>
+            <span className="text-primary-fixed-dim font-bold">{progressPercent}%</span>
           </div>
-          <div className="w-full h-0.5 bg-white/[0.06] rounded-full overflow-hidden">
-            <div className="bg-[#C8A84B] h-full rounded-full transition-all duration-150" style={{ width: `${progressPercent}%` }} />
+          <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+            <div className="bg-primary-fixed-dim h-full rounded-full transition-all duration-150" style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
       )}
 
       {state === 'success' && (
-        <div className="flex flex-col items-center gap-1.5 text-center">
-          <svg className="w-5 h-5 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-          <span className="text-xs text-[#10B981] font-semibold">Uploaded</span>
-          <span className="text-[10px] text-[#6B7280] truncate max-w-[200px]">{truncate(successFile, 24)}</span>
+        <div className="flex flex-col items-center gap-1 text-center py-xs">
+          <span className="material-symbols-outlined text-primary-fixed-dim text-[28px]">check_circle</span>
+          <span className="text-body-md text-primary font-semibold">Uploaded Successfully</span>
+          <span className="text-[10px] text-on-surface-variant font-mono truncate max-w-[180px]">{truncate(successFile, 24)}</span>
         </div>
       )}
 
       {state === 'error' && (
-        <div className="flex flex-col items-center gap-1.5 text-center">
-          <svg className="w-5 h-5 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          <span className="text-xs text-[#EF4444] font-semibold">Upload Failed</span>
-          <span className="text-[10px] text-[#EF4444] max-w-full truncate">{error}</span>
+        <div className="flex flex-col items-center gap-1 text-center py-xs">
+          <span className="material-symbols-outlined text-error text-[28px]">error</span>
+          <span className="text-body-md text-error font-semibold">Upload Failed</span>
+          <span className="text-[10px] text-error font-mono max-w-full truncate">{error}</span>
         </div>
       )}
     </div>

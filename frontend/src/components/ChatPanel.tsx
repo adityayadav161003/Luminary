@@ -1,8 +1,3 @@
-/**
- * ChatPanel — message thread with streaming support and citation chips.
- * Revamped with clean dark-glass bubbles and golden highlights.
- */
-
 import { useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useStore } from '../store';
@@ -17,8 +12,9 @@ function CitationChips({ citations, onCitationClick }: { citations: Citation[]; 
         <button 
           key={i} 
           onClick={() => onCitationClick(c)} 
-          className="px-2 py-1 rounded-md bg-[#1E2530] border border-white/[0.08] text-[11px] text-[#6B7280] hover:text-[#C8A84B] hover:border-[#C8A84B]/30 cursor-pointer transition-colors duration-150"
+          className="px-2.5 py-1 rounded-md bg-surface-container border border-outline-variant/30 text-[11px] text-on-surface-variant hover:text-primary-fixed-dim hover:border-primary-fixed-dim/30 cursor-pointer transition-colors duration-150 font-semibold"
         >
+          <span className="material-symbols-outlined text-[10px] mr-1 align-middle">menu_book</span>
           {c.filename} · Page {c.page_number}
         </button>
       ))}
@@ -34,7 +30,6 @@ export default function ChatPanel() {
   const sessions = useStore((s) => s.sessions);
   const isStreaming = useStore((s) => s.isStreaming);
   const setStreaming = useStore((s) => s.setStreaming);
-  
   const setAbortController = useStore((s) => s.setAbortController);
   const setSessionMessages = useStore((s) => s.setSessionMessages);
   const jumpToPage = useStore((s) => s.jumpToPage);
@@ -59,7 +54,6 @@ export default function ChatPanel() {
     const sessionId = currentSessionId;
     if (!sessionId) return;
 
-    // Create an empty assistant message first
     const assistantMsgId = crypto.randomUUID();
     const initialMessages = [
       ...messages,
@@ -191,28 +185,38 @@ export default function ChatPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0F1218]">
+    <div className="flex flex-col h-full bg-[#0A0B0D]">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#0F1218] flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-[#F0EDE8]">Intelligence Workspace</span>
+      <div className="flex items-center justify-between px-lg py-3 border-b border-outline-variant/10 bg-[#0A0B0D] flex-shrink-0">
+        <div className="flex items-center gap-xs">
+          <span className="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse" />
+          <span className="text-body-md font-bold text-on-surface">Intelligence Session</span>
         </div>
         {session && (
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[#6B7280] truncate max-w-[150px]">
+          <span className="text-[10px] font-mono px-sm py-0.5 rounded bg-surface-container border border-outline-variant/20 text-on-surface-variant truncate max-w-[200px]">
             {session.title}
           </span>
         )}
       </div>
 
       {/* Messages Scroll Container */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-lg py-lg space-y-lg custom-scrollbar">
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center animate-fade-in">
-            <svg className="w-8 h-8 text-white/10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-            </svg>
-            <p className="text-sm font-semibold text-[#374151]">Ask anything about your documents</p>
-            <p className="text-xs text-[#374151]">Select one or more PDFs from the sidebar</p>
+          <div className="flex flex-col gap-md items-start group animate-fade-in text-left">
+            <div className="w-10 h-10 rounded bg-surface-container border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-primary-fixed-dim text-headline-sm" style={{ fontVariationSettings: "'FILL' 0" }}>smart_toy</span>
+            </div>
+            <div className="flex flex-col gap-xs max-w-2xl">
+              <div className="flex items-center gap-sm">
+                <span className="text-label-caps font-bold text-primary-container">Luminary AI</span>
+                <span className="text-[10px] text-on-surface-variant font-mono">SYSTEM v4.0.2</span>
+              </div>
+              <div className="text-body-lg text-on-surface leading-relaxed">
+                Welcome to your secure intelligence workspace. I am ready to analyze your datasets and provide high-fidelity insights.
+                <br /><br />
+                Please check the document repository on the left and type a message below to begin our RAG-enhanced consultation.
+              </div>
+            </div>
           </div>
         )}
 
@@ -223,34 +227,52 @@ export default function ChatPanel() {
           
           if (isUser) {
             return (
-              <div key={msg.id} className="flex justify-end animate-fade-in">
-                <div className="max-w-[80%] px-3.5 py-2.5 rounded-2xl rounded-tr-sm bg-[#C8A84B]/[0.12] border border-[#C8A84B]/[0.18] text-[13px] text-[#F0EDE8] leading-relaxed break-words">
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+              <div key={msg.id} className="flex gap-md items-start group justify-end animate-fade-in">
+                <div className="flex flex-col gap-xs max-w-2xl text-right">
+                  <div className="flex items-center gap-sm justify-end">
+                    <span className="text-label-caps font-bold text-primary">You</span>
+                    <span className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wider">User</span>
+                  </div>
+                  <div className="text-body-lg text-on-surface leading-relaxed bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-lg break-words text-left">
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  </div>
                 </div>
               </div>
             );
           } else {
             return (
-              <div key={msg.id} className="flex justify-start gap-2.5 animate-fade-in">
-                <div className="w-6 h-6 rounded-full bg-[#C8A84B]/20 flex items-center justify-center flex-shrink-0 select-none">
-                  <span className="text-[#C8A84B] text-[10px]">✦</span>
+              <div key={msg.id} className="flex gap-md items-start group animate-fade-in text-left">
+                <div className="w-10 h-10 rounded bg-surface-container border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-primary-fixed-dim text-headline-sm">smart_toy</span>
                 </div>
-                <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-tl-sm bg-[#161B24] border border-white/[0.06] text-[13px] text-[#F0EDE8] leading-relaxed break-words">
-                  <p className="whitespace-pre-wrap">
-                    {msg.content}
-                    {showCursor && <span className="inline-block w-0.5 h-3.5 bg-[#C8A84B] ml-0.5 align-middle cursor-blink" />}
-                  </p>
-                  {msg.citations && (
-                    <CitationChips 
-                      citations={msg.citations} 
-                      onCitationClick={handleCitationClick} 
-                    />
-                  )}
+                <div className="flex flex-col gap-xs max-w-2xl">
+                  <div className="flex items-center gap-sm">
+                    <span className="text-label-caps font-bold text-primary-container">Luminary AI</span>
+                    <span className="text-[10px] text-on-surface-variant font-mono">SYSTEM v4.0.2</span>
+                  </div>
+                  <div className="text-body-lg text-on-surface leading-relaxed">
+                    <p className="whitespace-pre-wrap">
+                      {msg.content}
+                      {showCursor && <span className="inline-block w-0.5 h-3.5 bg-primary ml-0.5 align-middle cursor-blink" />}
+                    </p>
+                    {msg.citations && (
+                      <CitationChips 
+                        citations={msg.citations} 
+                        onCitationClick={handleCitationClick} 
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             );
           }
         })}
+
+        {/* Sync Indicator */}
+        <div className="pt-xl flex flex-col items-center opacity-25">
+          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-outline-variant to-transparent mb-lg"></div>
+          <p className="text-label-caps tracking-[0.2em] font-semibold uppercase">Context Synchronized</p>
+        </div>
       </div>
 
       {/* Input panel */}

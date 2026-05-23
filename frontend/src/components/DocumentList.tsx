@@ -1,8 +1,3 @@
-/**
- * DocumentList — shows uploaded PDFs with selection, deletion, and metadata.
- * Redesigned into modern dark-glass cards with smooth interactions.
- */
-
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { createApiClient } from '../api';
@@ -61,8 +56,6 @@ export default function DocumentList() {
       setLoading(true);
       setError('');
       const res = await api.listDocuments();
-      
-      // Deduplicate by doc_id
       const uniqueDocs = res.documents.filter(
         (doc, index, self) => self.findIndex((d) => d.doc_id === doc.doc_id) === index
       );
@@ -89,7 +82,7 @@ export default function DocumentList() {
     try {
       await api.deleteDocument(docId);
       removeDocument(docId);
-    } catch (err) {
+    } catch {
       window.dispatchEvent(new CustomEvent('toast', {
         detail: { message: "Failed to delete document. Try again.", type: 'error' }
       }));
@@ -115,17 +108,17 @@ export default function DocumentList() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2 p-3">
+      <div className="flex flex-col gap-2 py-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-white/[0.02] border border-white/[0.04] animate-pulse flex items-center justify-between px-3">
+          <div key={i} className="h-16 rounded-lg bg-surface-container-high border border-outline-variant/10 animate-pulse flex items-center justify-between px-3">
             <div className="flex items-center gap-3 w-3/4">
-              <div className="w-4 h-4 rounded bg-white/[0.04]" />
+              <div className="w-4 h-4 rounded bg-surface-container-highest" />
               <div className="space-y-2 flex-1">
-                <div className="h-3 bg-white/[0.04] rounded w-2/3" />
-                <div className="h-2.5 bg-white/[0.02] rounded w-1/2" />
+                <div className="h-3 bg-surface-container-highest rounded w-2/3" />
+                <div className="h-2.5 bg-surface-container rounded w-1/2" />
               </div>
             </div>
-            <div className="w-5 h-5 rounded bg-white/[0.04]" />
+            <div className="w-5 h-5 rounded bg-surface-container-highest" />
           </div>
         ))}
       </div>
@@ -135,10 +128,10 @@ export default function DocumentList() {
   if (error) {
     return (
       <div className="p-6 text-center animate-fade-in">
-        <p className="text-xs font-semibold text-[#EF4444] mb-2">{error}</p>
+        <p className="text-xs font-semibold text-error mb-2">{error}</p>
         <button
           onClick={fetchDocs}
-          className="px-3 py-1 text-xs font-semibold rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.12] text-[#F0EDE8] transition-all duration-150 cursor-pointer"
+          className="px-3 py-1 text-xs font-semibold rounded-lg bg-surface-container border border-outline hover:bg-surface-container-high text-on-surface transition-all duration-150 cursor-pointer"
         >
           Retry Connection
         </button>
@@ -148,14 +141,10 @@ export default function DocumentList() {
 
   if (documents.length === 0) {
     return (
-      <div className="p-3">
-        <div
-          onClick={() => document.getElementById("upload-dropzone")?.click()}
-          className="py-8 text-center text-xs text-[#374151] border border-dashed border-white/[0.08] rounded-xl hover:border-[#C8A84B]/40 hover:bg-white/[0.01] cursor-pointer transition-all duration-300"
-        >
-          <p className="font-semibold text-[#6B7280]">No documents yet</p>
-          <p className="text-[10px] text-[#374151] mt-0.5">Upload a PDF to begin</p>
-        </div>
+      <div className="py-8 text-center text-xs text-on-surface-variant/40 border border-dashed border-outline-variant/20 rounded-xl bg-surface-container-lowest/30 select-none">
+        <span className="material-symbols-outlined text-display-lg opacity-30 mb-sm block">inventory_2</span>
+        <p className="font-semibold text-on-surface-variant">No Documents Selected</p>
+        <p className="text-[10px] opacity-60 mt-0.5">Upload a PDF file to begin</p>
       </div>
     );
   }
@@ -163,13 +152,13 @@ export default function DocumentList() {
   const anyDocSelected = selectedDocIds.length > 0;
 
   return (
-    <div className="flex flex-col gap-1 py-2 overflow-y-auto custom-scrollbar">
+    <div className="flex flex-col gap-1 py-1 overflow-y-auto custom-scrollbar">
       {selectedDocIds.length > 1 && (
-        <div className="mx-3 mb-2 px-3 py-1.5 rounded-lg bg-[#C8A84B]/10 border border-[#C8A84B]/20 text-[11px] text-[#C8A84B] font-medium flex items-center justify-between">
-          <span>Chatting with {selectedDocIds.length} documents</span>
+        <div className="mb-2 px-3 py-1.5 rounded-lg bg-primary-container/10 border border-primary-container/20 text-[11px] text-primary-container font-semibold flex items-center justify-between shadow">
+          <span>Active context: {selectedDocIds.length} files</span>
           <button 
             onClick={(e) => { e.stopPropagation(); clearDocSelection(); }}
-            className="hover:text-white transition-colors cursor-pointer text-xs"
+            className="hover:text-white transition-colors cursor-pointer text-xs font-bold"
           >
             ×
           </button>
@@ -186,59 +175,57 @@ export default function DocumentList() {
             id={`doc-${doc.doc_id}`}
             onClick={(e) => handleClick(doc.doc_id, doc.page_count, e)}
             className={`
-              group relative flex items-center gap-2.5 px-3 py-2.5 mx-1.5 rounded-lg cursor-pointer
-              transition-all duration-150
+              group relative flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer
+              transition-all duration-150 border border-transparent
               ${isSelected 
-                ? 'bg-[#C8A84B]/[0.08] border-l-2 border-[#C8A84B]' 
-                : 'hover:bg-white/[0.04]'}
+                ? 'bg-primary/5 border-l-4 border-l-primary-fixed-dim border-outline-variant/20' 
+                : 'hover:bg-surface-container-high/40'}
               ${isDeleting ? 'opacity-40 pointer-events-none' : ''}
             `}
           >
-            {/* Left: checkbox */}
+            {/* Left: Checkbox */}
             <button
               onClick={(e) => handleCheckbox(doc.doc_id, e)}
               className={`
                 flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all duration-150
                 ${anyDocSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                 ${isSelected 
-                  ? 'bg-[#C8A84B] border-[#C8A84B]' 
-                  : 'border-white/20 bg-black/20 hover:border-[#C8A84B]/80'}
+                  ? 'bg-primary-fixed-dim border-primary-fixed-dim text-on-primary-fixed' 
+                  : 'border-outline-variant/50 bg-[#0d0e10]/60 hover:border-primary-fixed-dim'}
               `}
             >
               {isSelected && (
-                <svg className="w-2.5 h-2.5 text-[#0F1218]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                <svg className="w-2.5 h-2.5 text-[#121315]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               )}
             </button>
 
-            {/* Middle: filename & info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-[#F0EDE8] truncate group-hover:text-white transition-colors duration-150">
+            {/* Middle: Info */}
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[13px] font-semibold text-on-surface truncate group-hover:text-primary transition-colors duration-150">
                 {doc.filename}
               </p>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-[#6B7280]">
+              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-on-surface-variant opacity-75">
                 <span>{doc.page_count} pgs</span>
                 <span>·</span>
                 <span>{formatSize(doc.file_size_bytes)}</span>
                 <span>·</span>
-                <span>{getRelativeTime(doc.upload_time)}</span>
+                <span className="truncate">{getRelativeTime(doc.upload_time)}</span>
               </div>
             </div>
 
-            {/* Right: delete action */}
+            {/* Right: Delete action */}
             <button
               onClick={(e) => handleDelete(doc.doc_id, e)}
-              className="flex-shrink-0 p-1 text-[#6B7280] hover:text-[#EF4444] transition-colors duration-150 opacity-0 group-hover:opacity-100 cursor-pointer"
+              className="flex-shrink-0 p-1 text-on-surface-variant hover:text-error transition-colors duration-150 opacity-0 group-hover:opacity-100 cursor-pointer"
               title="Delete document"
               disabled={isDeleting}
             >
               {isDeleting ? (
-                <div className="w-3.5 h-3.5 border border-[#EF4444] border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border border-error border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <span className="material-symbols-outlined text-[16px]">delete</span>
               )}
             </button>
           </div>
