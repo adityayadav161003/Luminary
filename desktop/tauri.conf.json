@@ -1,9 +1,9 @@
 {
   "build": {
-    "beforeDevCommand": "cd ../web && npm run dev",
-    "beforeBuildCommand": "cd ../web && npm run build",
+    "beforeDevCommand": "cd ../frontend && npm run dev",
+    "beforeBuildCommand": "cd ../frontend && npm run build",
     "devPath": "http://localhost:5173",
-    "distDir": "../web/dist"
+    "distDir": "../frontend/dist"
   },
   "package": {
     "productName": "Luminary",

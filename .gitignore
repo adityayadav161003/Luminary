@@ -37,6 +37,8 @@ backend/luminary.db-journal
 
 # FAISS Vectors & Indexing
 backend/faiss_index/
+backend/faiss_store/
+faiss_store/
 *.index
 *.faiss
 
@@ -76,7 +78,7 @@ pnpm-debug.log*
 # 4. Agent, AI & Analytics Tools
 # ------------------------------------------------------------------------------
 # Graphify
-graphify-out/
+graphify-out/cache/
 .graphify/
 
 # Agents / IDE configs

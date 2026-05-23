@@ -129,11 +129,15 @@ Luminary/
  │    ├── rate_limit.py         # In-memory rate limiting logic
  │    └── services/             # Core Business & AI Logic
  │         ├── chat.py          # OpenRouter SSE streaming integration
- │         └── [rag_engine.py]  # FAISS, BM25, and local embeddings
+ │         ├── embeddings.py    # Local sentence-transformers embeddings
+ │         ├── pdf_parser.py    # PyMuPDF parser and chunker
+ │         ├── retrieval.py     # Hybrid search logic (BM25 + FAISS)
+ │         └── vector_store.py  # Local FAISS index lifecycle manager
  │
- ├── web/                       # React 19 Frontend
+ ├── frontend/                  # React 19 Frontend (Dashboard)
  │    ├── src/
- │    │    ├── components/      # UI pieces (ChatPanel, DocumentList, PDFViewer)
+ │    │    ├── components/      # UI components (SettingsPanel, SessionSidebar, etc.)
+ │    │    ├── pages/           # Pages (LandingPage)
  │    │    ├── App.tsx          # Main three-panel layout orchestrator
  │    │    └── store.ts         # Zustand global state (auth, active doc, chat)
  │    ├── index.html            # Vite entry HTML
@@ -185,7 +189,7 @@ pip install -r requirements.txt
 
 ### 3. Frontend Setup
 ```bash
-cd ../web
+cd ../frontend
 npm install
 ```
 
@@ -199,7 +203,7 @@ OPENROUTER_API_KEY=sk-or-v1-...
 DATABASE_URL=sqlite+aiosqlite:///./luminary.db
 ```
 
-**`web/.env`**
+**`frontend/.env`**
 ```ini
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 VITE_API_BASE_URL=http://localhost:8000
@@ -211,7 +215,7 @@ Start the backend (from `/backend`):
 uvicorn main:app --reload
 ```
 
-Start the frontend (from `/web`):
+Start the frontend (from `/frontend`):
 ```bash
 npm run dev
 ```

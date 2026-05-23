@@ -33,7 +33,7 @@ npx tauri dev
 
 ### Frontend
 
-Reuses `../web/src` React components via symlink or shared package. The same Zustand store, API layer, and UI components are used — only the API transport layer is swapped to use Tauri IPC instead of HTTP fetch.
+Reuses `../frontend/src` React components via symlink or shared package. The same Zustand store, API layer, and UI components are used — only the API transport layer is swapped to use Tauri IPC instead of HTTP fetch.
 
 ### Backend Sidecar
 
