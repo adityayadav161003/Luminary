@@ -1,15 +1,15 @@
 /**
  * ChatInput — Auto-resizing textarea with send/cancel controls.
+ * Features character counter and thinking state.
  */
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
-import { streamChat } from '../api';
-import type { SSEEvent, ChatMessage } from '../types';
+import type { ChatMessage } from '../types';
 
 export default function ChatInput() {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   const selectedDocIds = useStore((s) => s.selectedDocIds);
   const isStreaming = useStore((s) => s.isStreaming);
@@ -17,87 +17,112 @@ export default function ChatInput() {
   const createSession = useStore((s) => s.createSession);
   const addMessage = useStore((s) => s.addMessage);
   const setStreaming = useStore((s) => s.setStreaming);
-  const setStreamingContent = useStore((s) => s.setStreamingContent);
-  const appendStreamToken = useStore((s) => s.appendStreamToken);
-  const setStreamingCitations = useStore((s) => s.setStreamingCitations);
-  const finalizeStream = useStore((s) => s.finalizeStream);
+  const abortController = useStore((s) => s.abortController);
+  const setActiveTab = useStore((s) => s.setActiveTab);
 
-  // Auto-resize
+  // Auto-resize textarea height
   useEffect(() => {
     const ta = textareaRef.current;
-    if (ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 160) + 'px'; }
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+    }
   }, [input]);
 
   const send = useCallback(async () => {
     const query = input.trim();
     if (!query || selectedDocIds.length === 0 || isStreaming) return;
 
-    let sessionId = currentSessionId;
-    if (!sessionId) { sessionId = createSession(selectedDocIds); }
+    setActiveTab('chat');
 
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: query, timestamp: Date.now() };
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = createSession(selectedDocIds);
+    }
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: query,
+      timestamp: Date.now(),
+    };
     addMessage(userMsg);
     setInput('');
     setStreaming(true);
-    setStreamingContent('');
+  }, [input, selectedDocIds, isStreaming, currentSessionId, createSession, addMessage, setStreaming, setActiveTab]);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    try {
-      await streamChat(
-        { query, doc_ids: selectedDocIds, session_id: sessionId },
-        (event: SSEEvent) => {
-          if ('citations' in event) { setStreamingCitations(event.citations); }
-          else if ('token' in event) { appendStreamToken(event.token); }
-          else if ('done' in event) { /* stream done */ }
-          else if ('error' in event) { appendStreamToken(`\n\n⚠️ ${event.error}`); }
-        },
-        controller.signal,
-      );
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        appendStreamToken(`\n\n⚠️ ${(err as Error).message}`);
-      }
-    } finally {
-      finalizeStream();
-      abortRef.current = null;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
     }
-  }, [input, selectedDocIds, isStreaming, currentSessionId, createSession, addMessage, setStreaming, setStreamingContent, appendStreamToken, setStreamingCitations, finalizeStream]);
+  };
 
-  const cancel = () => { abortRef.current?.abort(); };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = e.currentTarget;
+    target.style.height = 'auto';
+    target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
   };
 
   const disabled = selectedDocIds.length === 0;
 
   return (
-    <div className="border-t border-[var(--color-border-default)] p-3 bg-[var(--color-bg-secondary)]">
+    <div className="px-3 pb-3 pt-2 border-t border-white/[0.06] bg-[#0F1218]">
       {disabled && (
-        <p className="text-xs text-[var(--color-text-muted)] mb-2 text-center">
-          Select a document to start chatting
-        </p>
+        <div className="text-center mb-2">
+          <span className="inline-block text-[10px] font-semibold text-[#C8A84B] font-mono bg-[#C8A84B]/10 border border-[#C8A84B]/20 px-2 py-0.5 rounded-full">
+            💡 Check a document checkbox on the left to start chat
+          </span>
+        </div>
       )}
-      <div className="flex items-end gap-2">
+
+      <div className="flex items-end gap-2 px-3 py-2.5 rounded-xl bg-[#161B24] border border-white/[0.08] focus-within:border-white/[0.16] transition-colors duration-150 relative">
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={disabled ? 'Select a document first…' : 'Ask about your documents…'}
+          onInput={handleInput}
+          placeholder={isStreaming ? 'Luminary is thinking...' : disabled ? 'Select a document first…' : 'Ask anything about your documents…'}
           disabled={disabled || isStreaming}
           rows={1}
-          className="flex-1 resize-none bg-[var(--color-bg-tertiary)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 focus:outline-none focus:border-[var(--color-accent)] disabled:opacity-50 transition-colors duration-150"
+          maxLength={2000}
+          className="flex-1 bg-transparent resize-none outline-none text-[13px] text-[#F0EDE8] placeholder:text-[#374151] min-h-[20px] max-h-[120px] leading-relaxed font-sans"
         />
+
+        {input.length > 1500 && (
+          <div className={`text-[10px] self-end mb-1.5 mr-1 font-mono ${input.length > 1900 ? 'text-[#EF4444]' : 'text-[#6B7280]'}`}>
+            {input.length} / 2000
+          </div>
+        )}
+
         {isStreaming ? (
-          <button onClick={cancel} className="flex-shrink-0 p-2 rounded-lg bg-[var(--color-danger-dim)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/30 transition-colors duration-150" title="Cancel">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          <button
+            onClick={() => abortController?.abort()}
+            className="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-[#F87171] flex items-center justify-center transition-colors duration-150 flex-shrink-0 self-end mb-0.5 cursor-pointer"
+            title="Cancel request"
+          >
+            {/* Square/stop icon */}
+            <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="6" y="6" width="12" height="12" rx="1.5" />
+            </svg>
           </button>
         ) : (
-          <button onClick={send} disabled={disabled || !input.trim()} className="flex-shrink-0 p-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-bg-primary)] hover:bg-[var(--color-accent-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150" title="Send">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+          <button
+            onClick={send}
+            disabled={disabled || !input.trim()}
+            className={`
+              w-7 h-7 rounded-lg flex items-center justify-center transition-colors duration-150 flex-shrink-0 self-end mb-0.5 cursor-pointer
+              ${disabled || !input.trim()
+                ? 'bg-white/[0.02] text-[#374151] cursor-not-allowed'
+                : 'bg-[#C8A84B] hover:bg-[#D4B55A] text-[#080A0F]'}
+            `}
+            title="Send Query"
+          >
+            {/* Arrow Up icon */}
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+            </svg>
           </button>
         )}
       </div>

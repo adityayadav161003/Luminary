@@ -8,6 +8,9 @@ import numpy as np
 import faiss
 from typing import List, Tuple, Optional
 import threading
+import logging
+
+logger = logging.getLogger("luminary.vector_store")
 
 _lock = threading.Lock()
 _index: Optional[faiss.IndexIDMap] = None
@@ -33,16 +36,20 @@ def get_index() -> faiss.IndexIDMap:
         if os.path.exists(index_file):
             base = faiss.read_index(index_file)
             _index = base if isinstance(base, faiss.IndexIDMap) else faiss.IndexIDMap(base)
+            logger.info(f"FAISS index loaded from disk with {_index.ntotal} vectors")
         else:
             _index = faiss.IndexIDMap(faiss.IndexFlatL2(EMBEDDING_DIM))
+            logger.info("FAISS index loaded from disk with 0 vectors")
         return _index
 
 
 def save_index() -> None:
     with _lock:
         if _index is not None:
-            os.makedirs(os.path.dirname(_get_index_file()), exist_ok=True)
-            faiss.write_index(_index, _get_index_file())
+            path = _get_index_file()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            faiss.write_index(_index, path)
+            logger.info("FAISS index saved to disk")
 
 
 def add_vectors(embeddings: np.ndarray, ids: List[int]) -> None:
@@ -61,10 +68,21 @@ def search_vectors(query_embedding: np.ndarray, top_k: int = 12) -> List[Tuple[i
     return [(int(indices[0][i]), float(distances[0][i])) for i in range(len(indices[0])) if int(indices[0][i]) != -1]
 
 
-def remove_vectors(ids: List[int]) -> None:
-    index = get_index()
-    if index.ntotal == 0:
-        return
+def rebuild_index(chunk_ids: List[int], chunk_texts: List[str]) -> None:
+    """Rebuild the flat index from the remaining chunks in the SQLite database."""
+    global _index
     with _lock:
-        index.remove_ids(np.array(ids, dtype=np.int64))
-    save_index()
+        index_dir = _get_index_dir()
+        os.makedirs(index_dir, exist_ok=True)
+        path = _get_index_file()
+        
+        new_index = faiss.IndexIDMap(faiss.IndexFlatL2(EMBEDDING_DIM))
+        if chunk_ids:
+            from services.embeddings import embed_texts
+            embeddings = embed_texts(chunk_texts)
+            new_index.add_with_ids(embeddings, np.array(chunk_ids, dtype=np.int64))
+            
+        _index = new_index
+        faiss.write_index(_index, path)
+        logger.info("FAISS index saved to disk")
+

@@ -6,7 +6,7 @@ export interface DocumentInfo {
   upload_time: string;
   page_count: number;
   chunk_count: number;
-  file_size: number;
+  file_size_bytes: number;
 }
 
 export interface DocumentListResponse {
@@ -42,6 +42,30 @@ export interface Citation {
   page_number: number;
   chunk_text: string;
   relevance_score: number;
+}
+
+export interface SessionInfo {
+  id: string;
+  title: string;
+  created_at: string;
+  message_count: number;
+}
+
+export interface SessionListResponse {
+  sessions: SessionInfo[];
+}
+
+export interface MessageInfo {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources_json: any;
+  created_at: string;
+}
+
+export interface MessageListResponse {
+  messages: MessageInfo[];
+  session_id: string;
 }
 
 /* ── App State Types ────────────────────────────────────────── */

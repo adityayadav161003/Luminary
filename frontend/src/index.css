@@ -1,60 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
-/* ── Luminary Design Tokens ─────────────────────────────────── */
 @theme {
-  --color-bg-primary: #0A0B0F;
-  --color-bg-secondary: #111318;
-  --color-bg-tertiary: #1A1D24;
-  --color-bg-elevated: #22252E;
-  --color-text-primary: #F4F1EC;
-  --color-text-secondary: #9B9AA3;
-  --color-text-muted: #5F5E67;
-  --color-border-default: #2A2D3A;
-  --color-border-subtle: rgba(255, 255, 255, 0.06);
-  --color-accent: #D4A843;
-  --color-accent-dim: rgba(212, 168, 67, 0.15);
-  --color-accent-hover: #E0B84E;
-  --color-surface: rgba(255, 255, 255, 0.03);
-  --color-surface-hover: rgba(255, 255, 255, 0.06);
-  --color-danger: #E5484D;
-  --color-danger-dim: rgba(229, 72, 77, 0.15);
-  --color-success: #30A46C;
-  --color-success-dim: rgba(48, 164, 108, 0.15);
+  --color-background: #080A0F;
+  --color-surface-1: #0F1218;
+  --color-surface-2: #161B24;
+  --color-surface-3: #1E2530;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #F0EDE8;
+  --color-text-muted: #6B7280;
+  --color-text-faint: #374151;
+  --color-accent: #C8A84B;
+  --color-accent-glow: rgba(200, 168, 75, 0.15);
+  --color-success: #10B981;
+  --color-error: #EF4444;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* ── Base ───────────────────────────────────────────────────── */
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background: #080A0F;
+  color: #F0EDE8;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
   overflow: hidden;
 }
 
-#root {
-  min-height: 100vh;
-}
-
-/* ── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -62,67 +44,57 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-default);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* ── Glass Surface ──────────────────────────────────────────── */
-.glass-surface {
-  background: var(--color-surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border-subtle);
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.glass-surface-hover {
-  transition: background-color 150ms ease-out;
+.skeleton {
+  background: linear-gradient(90deg, #161B24 25%, #1E2530 50%, #161B24 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.glass-surface-hover:hover {
-  background: var(--color-surface-hover);
-}
-
-/* ── Animations ─────────────────────────────────────────────── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse-cursor {
+@keyframes blink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0; }
 }
 
-.animate-fade-in {
-  animation: fadeIn 200ms ease-out both;
+.cursor-blink {
+  animation: blink 1s infinite;
 }
 
-.animate-cursor-pulse {
-  animation: pulse-cursor 1.2s ease-in-out infinite;
-}
-
-/* ── PDF Viewer ─────────────────────────────────────────────── */
+/* react-pdf styling adjustments */
 .react-pdf__Page__canvas {
   max-width: 100% !important;
   height: auto !important;
+  border-radius: 4px;
 }
 
 .react-pdf__Page__textContent {
   max-width: 100% !important;
 }
 
-/* ── Selection ──────────────────────────────────────────────── */
-::selection {
-  background: var(--color-accent-dim);
-  color: var(--color-accent);
+.react-pdf__Page__annotations {
+  max-width: 100% !important;
 }
 
-/* ── Progress Bar ───────────────────────────────────────────── */
+::selection {
+  background: rgba(200, 168, 75, 0.25);
+  color: #C8A84B;
+}
+
+/* Upload progress animation */
 .upload-progress-bar {
-  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
-  transition: width 200ms ease-out;
+  background: #C8A84B;
+  box-shadow: 0 0 10px rgba(200, 168, 75, 0.25);
+  transition: width 150ms ease-out;
 }

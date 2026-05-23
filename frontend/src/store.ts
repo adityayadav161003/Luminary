@@ -14,8 +14,10 @@ interface LuminaryStore {
   /* ── Documents ─────────────────────────────────────────── */
   documents: DocumentInfo[];
   selectedDocIds: string[];
+  pdfUrls: Record<string, string>;
   setDocuments: (docs: DocumentInfo[]) => void;
   addDocument: (doc: DocumentInfo) => void;
+  addPdfUrl: (docId: string, url: string) => void;
   removeDocument: (docId: string) => void;
   toggleDocSelection: (docId: string) => void;
   selectSingleDoc: (docId: string) => void;
@@ -24,6 +26,7 @@ interface LuminaryStore {
   /* ── PDF Viewer ────────────────────────────────────────── */
   viewerDocId: string | null;
   viewerPage: number;
+  currentPage: number;
   viewerTotalPages: number;
   viewerScale: number;
   highlightedPage: number | null;
@@ -32,6 +35,7 @@ interface LuminaryStore {
   setViewerTotalPages: (total: number) => void;
   setViewerScale: (scale: number) => void;
   navigateToPage: (page: number) => void;
+  jumpToPage: (page: number) => void;
 
   /* ── Chat Sessions ────────────────────────────────────── */
   sessions: ChatSession[];
@@ -39,6 +43,9 @@ interface LuminaryStore {
   isStreaming: boolean;
   streamingContent: string;
   streamingCitations: Citation[];
+  abortController: AbortController | null;
+  setSessions: (sessions: ChatSession[]) => void;
+  setSessionMessages: (sessionId: string, messages: ChatMessage[]) => void;
 
   createSession: (docIds: string[]) => string;
   switchSession: (sessionId: string) => void;
@@ -49,6 +56,7 @@ interface LuminaryStore {
   setStreaming: (streaming: boolean) => void;
   setStreamingContent: (content: string) => void;
   appendStreamToken: (token: string) => void;
+  setAbortController: (ac: AbortController | null) => void;
   finalizeStream: () => void;
   getCurrentSession: () => ChatSession | null;
 
@@ -86,15 +94,26 @@ export const useStore = create<LuminaryStore>((set, get) => ({
   /* ── Documents ─────────────────────────────────────────── */
   documents: [],
   selectedDocIds: [],
+  pdfUrls: {},
 
   setDocuments: (docs) => set({ documents: docs }),
   addDocument: (doc) => set((s) => ({ documents: [doc, ...s.documents] })),
+  addPdfUrl: (docId, url) => set((s) => ({ pdfUrls: { ...s.pdfUrls, [docId]: url } })),
   removeDocument: (docId) =>
-    set((s) => ({
-      documents: s.documents.filter((d) => d.doc_id !== docId),
-      selectedDocIds: s.selectedDocIds.filter((id) => id !== docId),
-      viewerDocId: s.viewerDocId === docId ? null : s.viewerDocId,
-    })),
+    set((s) => {
+      const url = s.pdfUrls[docId];
+      if (url) {
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+      }
+      const newUrls = { ...s.pdfUrls };
+      delete newUrls[docId];
+      return {
+        documents: s.documents.filter((d) => d.doc_id !== docId),
+        selectedDocIds: s.selectedDocIds.filter((id) => id !== docId),
+        viewerDocId: s.viewerDocId === docId ? null : s.viewerDocId,
+        pdfUrls: newUrls,
+      };
+    }),
   toggleDocSelection: (docId) =>
     set((s) => ({
       selectedDocIds: s.selectedDocIds.includes(docId)
@@ -107,16 +126,18 @@ export const useStore = create<LuminaryStore>((set, get) => ({
   /* ── PDF Viewer ────────────────────────────────────────── */
   viewerDocId: null,
   viewerPage: 1,
+  currentPage: 1,
   viewerTotalPages: 0,
   viewerScale: 1.0,
   highlightedPage: null,
 
   setViewerDoc: (docId, totalPages) =>
-    set({ viewerDocId: docId, viewerPage: 1, viewerTotalPages: totalPages || 0 }),
-  setViewerPage: (page) => set({ viewerPage: page }),
+    set({ viewerDocId: docId, viewerPage: 1, currentPage: 1, viewerTotalPages: totalPages || 0 }),
+  setViewerPage: (page) => set({ viewerPage: page, currentPage: page }),
   setViewerTotalPages: (total) => set({ viewerTotalPages: total }),
   setViewerScale: (scale) => set({ viewerScale: Math.max(0.5, Math.min(3, scale)) }),
-  navigateToPage: (page) => set({ viewerPage: page, highlightedPage: page }),
+  navigateToPage: (page) => set({ viewerPage: page, currentPage: page, highlightedPage: page }),
+  jumpToPage: (page) => set({ viewerPage: page, currentPage: page, highlightedPage: page }),
 
   /* ── Chat Sessions ────────────────────────────────────── */
   sessions: loadSessions(),
@@ -124,6 +145,15 @@ export const useStore = create<LuminaryStore>((set, get) => ({
   isStreaming: false,
   streamingContent: '',
   streamingCitations: [],
+  abortController: null,
+  setSessions: (sessions) => set({ sessions }),
+  setSessionMessages: (sessionId, messages) =>
+    set((s) => ({
+      sessions: s.sessions.map((sess) =>
+        sess.id === sessionId ? { ...sess, messages } : sess
+      ),
+    })),
+  setAbortController: (ac) => set({ abortController: ac }),
 
   createSession: (docIds) => {
     const id = generateId();

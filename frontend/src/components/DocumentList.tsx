@@ -1,23 +1,47 @@
 /**
  * DocumentList — shows uploaded PDFs with selection, deletion, and metadata.
+ * Redesigned into modern dark-glass cards with smooth interactions.
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { listDocuments, deleteDocument } from '../api';
+import { useAuth } from '@clerk/clerk-react';
+import { createApiClient } from '../api';
 import { useStore } from '../store';
 
-function formatBytes(bytes: number): string {
+const formatSize = (bytes: number) => {
+  if (!bytes || isNaN(bytes)) return 'Unknown size';
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+};
 
-function formatDate(isoDate: string): string {
+function getRelativeTime(isoDate: string): string {
   const d = new Date(isoDate);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const elapsed = d.getTime() - Date.now();
+  
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  
+  const units: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
+    { unit: 'year', ms: 31536000000 },
+    { unit: 'month', ms: 2628000000 },
+    { unit: 'day', ms: 86400000 },
+    { unit: 'hour', ms: 3600000 },
+    { unit: 'minute', ms: 60000 },
+    { unit: 'second', ms: 1000 }
+  ];
+
+  for (const { unit, ms } of units) {
+    if (Math.abs(elapsed) >= ms || unit === 'second') {
+      return rtf.format(Math.round(elapsed / ms), unit);
+    }
+  }
+  return 'just now';
 }
 
 export default function DocumentList() {
+  const { getToken } = useAuth();
+  const api = createApiClient(getToken);
+
   const documents = useStore((s) => s.documents);
   const setDocuments = useStore((s) => s.setDocuments);
   const selectedDocIds = useStore((s) => s.selectedDocIds);
@@ -26,6 +50,7 @@ export default function DocumentList() {
   const removeDocument = useStore((s) => s.removeDocument);
   const setViewerDoc = useStore((s) => s.setViewerDoc);
   const setActiveTab = useStore((s) => s.setActiveTab);
+  const clearDocSelection = useStore((s) => s.clearDocSelection);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,8 +60,13 @@ export default function DocumentList() {
     try {
       setLoading(true);
       setError('');
-      const res = await listDocuments();
-      setDocuments(res.documents);
+      const res = await api.listDocuments();
+      
+      // Deduplicate by doc_id
+      const uniqueDocs = res.documents.filter(
+        (doc, index, self) => self.findIndex((d) => d.doc_id === doc.doc_id) === index
+      );
+      setDocuments(uniqueDocs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load documents');
     } finally {
@@ -52,21 +82,30 @@ export default function DocumentList() {
     e.stopPropagation();
     if (deletingId) return;
 
+    const confirmDelete = window.confirm("Delete this document? This cannot be undone.");
+    if (!confirmDelete) return;
+
     setDeletingId(docId);
     try {
-      await deleteDocument(docId);
+      await api.deleteDocument(docId);
       removeDocument(docId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
+      window.dispatchEvent(new CustomEvent('toast', {
+        detail: { message: "Failed to delete document. Try again.", type: 'error' }
+      }));
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleClick = (docId: string, pageCount: number) => {
-    selectSingleDoc(docId);
-    setViewerDoc(docId, pageCount);
-    setActiveTab('viewer');
+  const handleClick = (docId: string, pageCount: number, e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey) {
+      toggleDocSelection(docId);
+    } else {
+      selectSingleDoc(docId);
+      setViewerDoc(docId, pageCount);
+      setActiveTab('viewer');
+    }
   };
 
   const handleCheckbox = (docId: string, e: React.MouseEvent) => {
@@ -76,9 +115,18 @@ export default function DocumentList() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2 p-2">
+      <div className="flex flex-col gap-2 p-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
+          <div key={i} className="h-16 rounded-xl bg-white/[0.02] border border-white/[0.04] animate-pulse flex items-center justify-between px-3">
+            <div className="flex items-center gap-3 w-3/4">
+              <div className="w-4 h-4 rounded bg-white/[0.04]" />
+              <div className="space-y-2 flex-1">
+                <div className="h-3 bg-white/[0.04] rounded w-2/3" />
+                <div className="h-2.5 bg-white/[0.02] rounded w-1/2" />
+              </div>
+            </div>
+            <div className="w-5 h-5 rounded bg-white/[0.04]" />
+          </div>
         ))}
       </div>
     );
@@ -86,13 +134,13 @@ export default function DocumentList() {
 
   if (error) {
     return (
-      <div className="p-4 text-center">
-        <p className="text-sm text-[var(--color-danger)] mb-2">{error}</p>
+      <div className="p-6 text-center animate-fade-in">
+        <p className="text-xs font-semibold text-[#EF4444] mb-2">{error}</p>
         <button
           onClick={fetchDocs}
-          className="text-xs text-[var(--color-accent)] hover:underline"
+          className="px-3 py-1 text-xs font-semibold rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.12] text-[#F0EDE8] transition-all duration-150 cursor-pointer"
         >
-          Retry
+          Retry Connection
         </button>
       </div>
     );
@@ -100,18 +148,34 @@ export default function DocumentList() {
 
   if (documents.length === 0) {
     return (
-      <div className="p-6 text-center">
-        <svg className="w-10 h-10 mx-auto mb-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-        </svg>
-        <p className="text-sm text-[var(--color-text-muted)]">No documents yet</p>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">Upload a PDF to get started</p>
+      <div className="p-3">
+        <div
+          onClick={() => document.getElementById("upload-dropzone")?.click()}
+          className="py-8 text-center text-xs text-[#374151] border border-dashed border-white/[0.08] rounded-xl hover:border-[#C8A84B]/40 hover:bg-white/[0.01] cursor-pointer transition-all duration-300"
+        >
+          <p className="font-semibold text-[#6B7280]">No documents yet</p>
+          <p className="text-[10px] text-[#374151] mt-0.5">Upload a PDF to begin</p>
+        </div>
       </div>
     );
   }
 
+  const anyDocSelected = selectedDocIds.length > 0;
+
   return (
-    <div className="flex flex-col gap-1 p-1">
+    <div className="flex flex-col gap-1 py-2 overflow-y-auto custom-scrollbar">
+      {selectedDocIds.length > 1 && (
+        <div className="mx-3 mb-2 px-3 py-1.5 rounded-lg bg-[#C8A84B]/10 border border-[#C8A84B]/20 text-[11px] text-[#C8A84B] font-medium flex items-center justify-between">
+          <span>Chatting with {selectedDocIds.length} documents</span>
+          <button 
+            onClick={(e) => { e.stopPropagation(); clearDocSelection(); }}
+            className="hover:text-white transition-colors cursor-pointer text-xs"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {documents.map((doc) => {
         const isSelected = selectedDocIds.includes(doc.doc_id);
         const isDeleting = deletingId === doc.doc_id;
@@ -120,50 +184,62 @@ export default function DocumentList() {
           <div
             key={doc.doc_id}
             id={`doc-${doc.doc_id}`}
-            onClick={() => handleClick(doc.doc_id, doc.page_count)}
+            onClick={(e) => handleClick(doc.doc_id, doc.page_count, e)}
             className={`
-              group relative flex items-start gap-3 p-3 rounded-lg cursor-pointer
-              transition-colors duration-150
-              ${isSelected ? 'bg-[var(--color-accent-dim)] border border-[var(--color-accent)]/30' : 'hover:bg-[var(--color-surface-hover)] border border-transparent'}
-              ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
+              group relative flex items-center gap-2.5 px-3 py-2.5 mx-1.5 rounded-lg cursor-pointer
+              transition-all duration-150
+              ${isSelected 
+                ? 'bg-[#C8A84B]/[0.08] border-l-2 border-[#C8A84B]' 
+                : 'hover:bg-white/[0.04]'}
+              ${isDeleting ? 'opacity-40 pointer-events-none' : ''}
             `}
           >
-            {/* Checkbox */}
+            {/* Left: checkbox */}
             <button
               onClick={(e) => handleCheckbox(doc.doc_id, e)}
               className={`
-                mt-0.5 flex-shrink-0 w-4 h-4 rounded border transition-colors duration-150
-                ${isSelected ? 'bg-[var(--color-accent)] border-[var(--color-accent)]' : 'border-[var(--color-border-default)] hover:border-[var(--color-text-muted)]'}
+                flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all duration-150
+                ${anyDocSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                ${isSelected 
+                  ? 'bg-[#C8A84B] border-[#C8A84B]' 
+                  : 'border-white/20 bg-black/20 hover:border-[#C8A84B]/80'}
               `}
             >
               {isSelected && (
-                <svg className="w-4 h-4 text-[var(--color-bg-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg className="w-2.5 h-2.5 text-[#0F1218]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               )}
             </button>
 
-            {/* Info */}
+            {/* Middle: filename & info */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">{doc.filename}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-[var(--color-text-muted)]">{doc.page_count} pg</span>
-                <span className="text-xs text-[var(--color-text-muted)]">·</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{formatBytes(doc.file_size)}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">·</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{formatDate(doc.upload_time)}</span>
+              <p className="text-[13px] font-medium text-[#F0EDE8] truncate group-hover:text-white transition-colors duration-150">
+                {doc.filename}
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-[#6B7280]">
+                <span>{doc.page_count} pgs</span>
+                <span>·</span>
+                <span>{formatSize(doc.file_size_bytes)}</span>
+                <span>·</span>
+                <span>{getRelativeTime(doc.upload_time)}</span>
               </div>
             </div>
 
-            {/* Delete */}
+            {/* Right: delete action */}
             <button
               onClick={(e) => handleDelete(doc.doc_id, e)}
-              className="flex-shrink-0 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-[var(--color-danger-dim)]"
+              className="flex-shrink-0 p-1 text-[#6B7280] hover:text-[#EF4444] transition-colors duration-150 opacity-0 group-hover:opacity-100 cursor-pointer"
               title="Delete document"
+              disabled={isDeleting}
             >
-              <svg className="w-4 h-4 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
+              {isDeleting ? (
+                <div className="w-3.5 h-3.5 border border-[#EF4444] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              )}
             </button>
           </div>
         );

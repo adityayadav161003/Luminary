@@ -11,7 +11,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("../.env")
 
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,11 +26,11 @@ from schemas import (
     DeleteResponse, ChatRequest, SessionOut, SessionListResponse,
     MessageOut, MessageListResponse,
 )
-from auth import get_current_user_id
+from auth import get_current_user, UserObject
 from rate_limit import check_query_rate_limit, check_upload_limit
 from services.pdf_parser import extract_text_from_pdf, chunk_text
 from services.embeddings import embed_texts
-from services.vector_store import add_vectors, remove_vectors, get_index
+from services.vector_store import add_vectors, rebuild_index, get_index
 from services.retrieval import retrieve_chunks, build_context_prompt
 from services.chat import stream_chat_response
 
@@ -76,8 +76,9 @@ async def health():
 async def upload_document(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Only PDF files are accepted")
 
@@ -149,8 +150,9 @@ async def upload_document(
 @app.get("/documents", response_model=DocumentListResponse, tags=["Documents"])
 async def list_documents(
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     stmt = select(Document).where(Document.user_id == user_id).order_by(Document.upload_time.desc())
     result = await db.execute(stmt)
     docs = result.scalars().all()
@@ -169,21 +171,30 @@ async def list_documents(
 async def delete_document(
     doc_id: str,
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     doc = await db.scalar(select(Document).where(Document.id == doc_id, Document.user_id == user_id))
     if not doc:
         raise HTTPException(404, "Document not found")
 
-    chunk_ids = (await db.execute(select(Chunk.id).where(Chunk.doc_id == doc_id))).scalars().all()
-    if chunk_ids:
-        try:
-            remove_vectors(list(chunk_ids))
-        except Exception as e:
-            logger.warning(f"FAISS removal failed: {e}")
-
     await db.delete(doc)
     await db.commit()
+
+    # Rebuild FAISS index from remaining chunks in SQLite
+    stmt = select(Chunk)
+    res = await db.execute(stmt)
+    remaining_chunks = res.scalars().all()
+
+    from services.vector_store import rebuild_index
+    try:
+        rebuild_index(
+            [c.id for c in remaining_chunks],
+            [c.text for c in remaining_chunks]
+        )
+    except Exception as e:
+        logger.error(f"Failed to rebuild FAISS index: {e}")
+
     return DeleteResponse(message="Deleted", doc_id=doc_id)
 
 
@@ -194,8 +205,9 @@ async def delete_document(
 async def chat(
     request: ChatRequest,
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     check_query_rate_limit(user_id)
 
     # Validate docs belong to user
@@ -214,7 +226,10 @@ async def chat(
     else:
         sess = await db.scalar(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user_id))
         if not sess:
-            raise HTTPException(404, "Session not found")
+            # Auto-create session if it exists in client localStorage but not in db
+            sess = ChatSession(id=session_id, user_id=user_id, title=request.query[:60])
+            db.add(sess)
+            await db.flush()
 
     # Save user message
     user_msg = ChatMessage(id=str(uuid.uuid4()), session_id=session_id, role="user", content=request.query)
@@ -234,35 +249,49 @@ async def chat(
     collected_tokens: list[str] = []
 
     async def event_stream():
-        yield f"data: {json.dumps({'citations': sources, 'session_id': session_id})}\n\n"
-
         async for sse_chunk in stream_chat_response(request.query, context):
-            yield sse_chunk
-            # Collect tokens for persistence
-            try:
-                parsed = json.loads(sse_chunk.replace("data: ", "").strip())
-                if "token" in parsed:
-                    collected_tokens.append(parsed["token"])
-            except Exception:
-                pass
+            if sse_chunk.strip().startswith("data: "):
+                data_str = sse_chunk.replace("data: ", "").strip()
+                if data_str == "[DONE]" or data_str == "[done]":
+                    continue
+                try:
+                    parsed = json.loads(data_str)
+                    if "token" in parsed:
+                        token = parsed["token"]
+                        collected_tokens.append(token)
+                        yield f"data: {json.dumps({'token': token})}\n\n"
+                    elif "error" in parsed:
+                        yield f"data: {json.dumps({'error': parsed['error']})}\n\n"
+                except Exception:
+                    pass
+
+        # After the stream completes, emit the sources event with the top 5 retrieved chunks
+        formatted_sources = [
+            {"filename": c["filename"], "page": c["page_number"]}
+            for c in chunks[:5]
+        ]
+        yield f"data: {json.dumps({'sources': formatted_sources})}\n\n"
+
+        # Then emit [DONE]
+        yield "data: [DONE]\n\n"
 
         # Persist assistant message after stream completes
         try:
             full_response = "".join(collected_tokens)
             if full_response:
-                async with db.begin():
-                    asst_msg = ChatMessage(
-                        id=str(uuid.uuid4()), session_id=session_id,
-                        role="assistant", content=full_response, sources_json=sources,
-                    )
-                    db.add(asst_msg)
+                asst_msg = ChatMessage(
+                    id=str(uuid.uuid4()), session_id=session_id,
+                    role="assistant", content=full_response, sources_json=sources,
+                )
+                db.add(asst_msg)
+                await db.commit()
         except Exception as e:
             logger.error(f"Failed to persist assistant message: {e}")
 
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
@@ -272,8 +301,9 @@ async def chat(
 @app.get("/sessions", response_model=SessionListResponse, tags=["Sessions"])
 async def list_sessions(
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     stmt = select(ChatSession).where(ChatSession.user_id == user_id).order_by(ChatSession.created_at.desc())
     result = await db.execute(stmt)
     sessions = result.scalars().all()
@@ -290,8 +320,9 @@ async def list_sessions(
 async def get_session_messages(
     session_id: str,
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     sess = await db.scalar(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user_id))
     if not sess:
         raise HTTPException(404, "Session not found")
@@ -310,8 +341,9 @@ async def get_session_messages(
 async def delete_session(
     session_id: str,
     db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
+    user: UserObject = Depends(get_current_user),
 ):
+    user_id = user.id
     sess = await db.scalar(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user_id))
     if not sess:
         raise HTTPException(404, "Session not found")

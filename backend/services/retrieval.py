@@ -26,22 +26,39 @@ async def retrieve_chunks(
     2. FAISS search top_k_faiss, filter by user_id
     3. BM25 re-rank → top_k_final
     """
+    # Fetch all allowed chunk IDs for the selected doc_ids and user_id
+    stmt = select(Chunk.id).where(Chunk.user_id == user_id, Chunk.doc_id.in_(doc_ids))
+    res = await db.execute(stmt)
+    allowed_ids = set(res.scalars().all())
+
+    if not allowed_ids:
+        return []
+
     query_embedding = embed_query(query)
-    faiss_results = search_vectors(query_embedding, top_k=top_k_faiss * 3)
+    # Search a large enough subset of the index to find matching candidate vectors
+    from services.vector_store import get_index
+    idx = get_index()
+    actual_k = min(idx.ntotal, 2000)
+    faiss_results = search_vectors(query_embedding, top_k=actual_k)
 
     if not faiss_results:
         return []
 
-    chunk_ids = [r[0] for r in faiss_results]
-    faiss_scores = {r[0]: r[1] for r in faiss_results}
+    # Filter vectors to only those belonging to the selected document set
+    filtered_results = [r for r in faiss_results if r[0] in allowed_ids]
+    filtered_results = filtered_results[:top_k_faiss * 3]
 
-    # Fetch chunks filtered by user_id AND doc_ids
+    if not filtered_results:
+        return []
+
+    chunk_ids = [r[0] for r in filtered_results]
+    faiss_scores = {r[0]: r[1] for r in filtered_results}
+
+    # Fetch chunks from database
     stmt = (
         select(Chunk, Document.filename)
         .join(Document, Chunk.doc_id == Document.id)
         .where(Chunk.id.in_(chunk_ids))
-        .where(Chunk.user_id == user_id)
-        .where(Chunk.doc_id.in_(doc_ids))
     )
     result = await db.execute(stmt)
     rows = result.all()

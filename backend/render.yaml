@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: luminary-api
+    name: luminary-backend
     runtime: python
-    repo: https://github.com/YOUR_USERNAME/luminary
-    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
     envVars:
       - key: OPENROUTER_API_KEY
         sync: false
@@ -17,9 +16,5 @@ services:
         sync: false
       - key: FAISS_INDEX_PATH
         value: ./faiss_store
-      - key: PYTHON_VERSION
-        value: "3.11"
-    disk:
-      name: luminary-data
-      mountPath: /opt/render/project/src/faiss_store
-      sizeGB: 1
+      - key: DATABASE_URL
+        value: sqlite:///./luminary.db

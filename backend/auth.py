@@ -1,13 +1,6 @@
-"""
-Luminary — Clerk JWT verification.
-
-Verifies Authorization: Bearer <token> headers using Clerk JWKS endpoint.
-Extracts user_id from the 'sub' claim. Ensures user row exists in SQLite.
-This is a FastAPI dependency — never inline JWT logic in route handlers.
-"""
-
 import os
 import logging
+import time
 from typing import Optional
 
 import jwt
@@ -24,16 +17,25 @@ logger = logging.getLogger("luminary.auth")
 # ── Configuration ────────────────────────────────────────────
 CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "")
 _jwks_client: Optional[PyJWKClient] = None
+_jwks_last_fetch: float = 0
+
+
+class UserObject:
+    def __init__(self, id: str, email: str):
+        self.id = id
+        self.email = email
 
 
 def _get_jwks_client() -> PyJWKClient:
-    """Lazy-init JWKS client (cached after first call)."""
-    global _jwks_client
-    if _jwks_client is None:
-        url = CLERK_JWKS_URL
-        if not url:
-            raise RuntimeError("CLERK_JWKS_URL not configured")
+    """Lazy-init and cache JWKS client (refreshes every 60 minutes)."""
+    global _jwks_client, _jwks_last_fetch
+    now = time.time()
+    url = CLERK_JWKS_URL or os.getenv("CLERK_JWKS_URL", "")
+    if not url:
+        raise RuntimeError("CLERK_JWKS_URL not configured")
+    if _jwks_client is None or (now - _jwks_last_fetch) > 3600:
         _jwks_client = PyJWKClient(url, cache_keys=True)
+        _jwks_last_fetch = now
     return _jwks_client
 
 
@@ -41,32 +43,20 @@ def _extract_bearer_token(request: Request) -> str:
     """Extract Bearer token from Authorization header."""
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
     return auth_header[7:]
 
 
-async def get_current_user_id(
+async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> str:
+) -> UserObject:
     """
-    FastAPI dependency: verify Clerk JWT and return user_id.
-    Also ensures a User row exists in the database (upsert on first sight).
+    FastAPI dependency: verify Clerk JWT and return UserObject.
+    Also ensures a User row exists in the database.
     """
-    token = _extract_bearer_token(request)
-
-    # ── Development bypass ───────────────────────────────────
-    # When CLERK_JWKS_URL is not set, accept "dev_<user_id>" tokens for local testing.
-    if not CLERK_JWKS_URL:
-        if token.startswith("dev_"):
-            user_id = token
-        else:
-            user_id = "dev_user"
-        await _ensure_user_exists(db, user_id)
-        return user_id
-
-    # ── Production: verify with Clerk JWKS ───────────────────
     try:
+        token = _extract_bearer_token(request)
         client = _get_jwks_client()
         signing_key = client.get_signing_key_from_jwt(token)
         payload = jwt.decode(
@@ -77,20 +67,15 @@ async def get_current_user_id(
         )
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Token missing sub claim")
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-        email = payload.get("email")
+        email = payload.get("email", "")
         await _ensure_user_exists(db, user_id, email)
-        return user_id
+        return UserObject(id=user_id, email=email)
 
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid JWT: {e}")
-        raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
-        logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        logger.warning(f"Authentication failed: {e}")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
 async def _ensure_user_exists(
@@ -104,3 +89,4 @@ async def _ensure_user_exists(
     if user is None:
         db.add(User(id=user_id, email=email))
         await db.flush()
+
