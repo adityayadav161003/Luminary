@@ -353,9 +353,9 @@ function MainRoutes() {
           <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#e3e2e5] font-sans relative selection:bg-primary/30">
             {/* Header */}
             <header className="w-full border-b border-outline-variant/30 bg-surface/60 backdrop-blur-xl z-20">
-              <div className="flex justify-between items-center w-full px-gutter max-w-7xl mx-auto h-16">
+              <div className="flex justify-between items-center w-full px-6 max-w-7xl mx-auto h-16">
                 <div 
-                  className="text-headline-sm font-bold text-primary-container tracking-tighter flex items-center gap-xs cursor-pointer"
+                  className="text-lg font-bold text-primary-container tracking-tighter flex items-center gap-2 cursor-pointer"
                   onClick={() => navigate('/')}
                 >
                   <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
@@ -363,7 +363,7 @@ function MainRoutes() {
                 </div>
                 <button 
                   onClick={() => navigate('/')} 
-                  className="bg-primary-container text-on-primary-container px-md py-xs rounded-lg font-bold text-body-md hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+                  className="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all active:scale-95 cursor-pointer"
                 >
                   Home
                 </button>
@@ -382,7 +382,7 @@ function MainRoutes() {
             </main>
 
             {/* Footer */}
-            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-md z-20 text-center flex items-center justify-center gap-xs">
+            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-4 z-20 text-center flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified_user</span>
               <span className="text-xs text-on-surface-variant font-medium">Secure AES-256 encrypted authentication</span>
             </footer>
@@ -395,9 +395,9 @@ function MainRoutes() {
           <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#e3e2e5] font-sans relative selection:bg-primary/30">
             {/* Header */}
             <header className="w-full border-b border-outline-variant/30 bg-surface/60 backdrop-blur-xl z-20">
-              <div className="flex justify-between items-center w-full px-gutter max-w-7xl mx-auto h-16">
+              <div className="flex justify-between items-center w-full px-6 max-w-7xl mx-auto h-16">
                 <div 
-                  className="text-headline-sm font-bold text-primary-container tracking-tighter flex items-center gap-xs cursor-pointer"
+                  className="text-lg font-bold text-primary-container tracking-tighter flex items-center gap-2 cursor-pointer"
                   onClick={() => navigate('/')}
                 >
                   <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
@@ -405,7 +405,7 @@ function MainRoutes() {
                 </div>
                 <button 
                   onClick={() => navigate('/')} 
-                  className="bg-primary-container text-on-primary-container px-md py-xs rounded-lg font-bold text-body-md hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+                  className="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all active:scale-95 cursor-pointer"
                 >
                   Home
                 </button>
@@ -424,7 +424,7 @@ function MainRoutes() {
             </main>
 
             {/* Footer */}
-            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-md z-20 text-center flex items-center justify-center gap-xs">
+            <footer className="bg-[#0A0B0D] border-t border-outline-variant/10 w-full py-4 z-20 text-center flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified_user</span>
               <span className="text-xs text-on-surface-variant font-medium">Secure AES-256 encrypted authentication</span>
             </footer>

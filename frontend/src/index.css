@@ -49,15 +49,7 @@
   --color-on-tertiary: #2e3135;
   --color-on-error: #690005;
 
-  /* Custom Spacing scale for Tailwind v4 */
-  --spacing-lg: 32px;
-  --spacing-xl: 48px;
-  --spacing-base: 4px;
-  --spacing-sm: 16px;
-  --spacing-gutter: 20px;
-  --spacing-margin-page: 24px;
-  --spacing-md: 24px;
-  --spacing-xs: 8px;
+
 
   /* Custom Font Sizes scale for Tailwind v4 */
   --font-size-label-caps: 12px;
