@@ -150,7 +150,7 @@ export default function SessionSidebar() {
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1 overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-2.5 custom-scrollbar">
         {sessions.length === 0 ? (
           <div className="text-[11px] text-[#374151] px-3 py-4 text-center italic">
             No sessions yet
@@ -163,7 +163,7 @@ export default function SessionSidebar() {
                 key={s.id} 
                 onClick={() => handleSessionClick(s.id)} 
                 className={`
-                  px-3 py-2 mx-1.5 rounded-lg cursor-pointer flex items-center justify-between gap-2 group transition-colors duration-150
+                  px-3 py-3 mx-1.5 rounded-lg cursor-pointer flex items-center justify-between gap-2 group transition-colors duration-150
                   ${isActive 
                     ? 'bg-[#C8A84B]/[0.06] text-[#C8A84B]' 
                     : 'hover:bg-white/[0.04] text-[#F0EDE8]'}

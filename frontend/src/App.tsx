@@ -89,8 +89,8 @@ function Workspace() {
   return (
     <div className="h-screen flex overflow-hidden bg-[#0A0B0D] font-sans">
       {/* ── Sidebar Navigation Shell ── */}
-      <aside className="hidden md:flex h-screen w-64 flex-shrink-0 bg-surface-container border-r border-outline-variant/20 flex-col py-6 z-40">
-        <div className="px-4 mb-8 text-left">
+      <aside className="hidden md:flex h-screen w-64 flex-shrink-0 bg-surface-container border-r border-outline-variant/20 flex-col py-8 z-40">
+        <div className="px-6 mb-8 text-left">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
             <span className="text-lg font-bold text-primary">Luminary</span>
@@ -98,10 +98,10 @@ function Workspace() {
           <p className="text-xs uppercase tracking-wider text-on-surface-variant mt-1.5 opacity-60 font-semibold">Premium RAG Pipeline</p>
         </div>
         
-        <nav className="flex-1 px-2 flex flex-col gap-1">
+        <nav className="flex-1 px-4 flex flex-col gap-2">
           <button 
             onClick={() => setActiveView('intelligence')}
-            className={`flex items-center gap-3 px-4 py-2 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'intelligence' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+            className={`flex items-center gap-3 px-4 py-2.5 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'intelligence' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
           >
             <span className="material-symbols-outlined">psychology</span>
             <span className="text-xs uppercase tracking-wider font-semibold">Intelligence</span>
@@ -109,7 +109,7 @@ function Workspace() {
           
           <button 
             onClick={() => setActiveView('intelligence')}
-            className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+            className="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
           >
             <span className="material-symbols-outlined">description</span>
             <span className="text-xs uppercase tracking-wider font-semibold">Documents</span>
@@ -117,7 +117,7 @@ function Workspace() {
           
           <button 
             onClick={() => setActiveView('intelligence')}
-            className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
+            className="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:bg-surface-variant/50 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md"
           >
             <span className="material-symbols-outlined">history</span>
             <span className="text-xs uppercase tracking-wider font-semibold">History</span>
@@ -125,35 +125,35 @@ function Workspace() {
           
           <button 
             onClick={() => setActiveView('settings')}
-            className={`flex items-center gap-3 px-4 py-2 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'settings' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
+            className={`flex items-center gap-3 px-4 py-2.5 hover:translate-x-1 transition-all duration-200 cursor-pointer text-left w-full rounded-md ${activeView === 'settings' ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold' : 'text-on-surface-variant'}`}
           >
             <span className="material-symbols-outlined">settings</span>
             <span className="text-xs uppercase tracking-wider font-semibold">Settings</span>
           </button>
         </nav>
         
-        <div className="px-4 mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
+        <div className="px-6 mt-auto flex flex-col gap-3 border-t border-outline-variant/10 pt-6">
           <button 
             onClick={handleNewAnalysis}
-            className="w-full bg-primary-container text-on-primary-container font-bold py-2.5 px-4 rounded transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider shadow-lg shadow-primary-container/10"
+            className="w-full bg-primary-container text-on-primary-container font-bold py-3 px-4 rounded transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider shadow-lg shadow-primary-container/10"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             New Analysis
           </button>
           
-          <div className="mt-6 flex flex-col gap-1">
+          <div className="mt-6 flex flex-col gap-2">
             <a 
               href="https://fastapi.tiangolo.com" 
               target="_blank" 
               rel="noreferrer" 
-              className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold"
+              className="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold"
             >
               <span className="material-symbols-outlined text-[18px]">help_outline</span>
               Help
             </a>
             <button 
               onClick={handleSignOut}
-              className="flex items-center gap-3 text-on-surface-variant px-4 py-2 hover:text-error transition-colors text-xs uppercase tracking-wider font-semibold cursor-pointer text-left w-full rounded-md"
+              className="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:text-error transition-colors text-xs uppercase tracking-wider font-semibold cursor-pointer text-left w-full rounded-md"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
               Logout
@@ -217,7 +217,7 @@ function Workspace() {
                       <DocumentList />
                     </div>
  
-                    <div className="border-t border-outline-variant/10 pt-2 min-h-[140px] flex-shrink-0 bg-surface-container-low">
+                    <div className="border-t border-outline-variant/10 pt-2 min-h-[220px] flex-shrink-0 bg-surface-container-low">
                       <SessionSidebar />
                     </div>
                   </div>

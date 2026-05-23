@@ -152,7 +152,7 @@ export default function DocumentList() {
   const anyDocSelected = selectedDocIds.length > 0;
 
   return (
-    <div className="flex flex-col gap-1 py-1 overflow-y-auto custom-scrollbar">
+    <div className="flex flex-col gap-2.5 py-1.5 overflow-y-auto custom-scrollbar">
       {selectedDocIds.length > 1 && (
         <div className="mb-2 px-3 py-1.5 rounded-lg bg-primary-container/10 border border-primary-container/20 text-[11px] text-primary-container font-semibold flex items-center justify-between shadow">
           <span>Active context: {selectedDocIds.length} files</span>
@@ -175,7 +175,7 @@ export default function DocumentList() {
             id={`doc-${doc.doc_id}`}
             onClick={(e) => handleClick(doc.doc_id, doc.page_count, e)}
             className={`
-              group relative flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer
+              group relative flex items-center gap-2.5 px-3 py-3 rounded-lg cursor-pointer
               transition-all duration-150 border border-transparent
               ${isSelected 
                 ? 'bg-primary/5 border-l-4 border-l-primary-fixed-dim border-outline-variant/20' 

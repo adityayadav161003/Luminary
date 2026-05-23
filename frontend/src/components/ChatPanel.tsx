@@ -187,31 +187,31 @@ export default function ChatPanel() {
   return (
     <div className="flex flex-col h-full bg-[#0A0B0D]">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-lg py-3 border-b border-outline-variant/10 bg-[#0A0B0D] flex-shrink-0">
-        <div className="flex items-center gap-xs">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10 bg-[#0A0B0D] flex-shrink-0">
+        <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse" />
-          <span className="text-body-md font-bold text-on-surface">Intelligence Session</span>
+          <span className="text-sm font-bold text-on-surface">Intelligence Session</span>
         </div>
         {session && (
-          <span className="text-[10px] font-mono px-sm py-0.5 rounded bg-surface-container border border-outline-variant/20 text-on-surface-variant truncate max-w-[200px]">
+          <span className="text-[10px] font-mono px-3 py-0.5 rounded bg-surface-container border border-outline-variant/20 text-on-surface-variant truncate max-w-[200px]">
             {session.title}
           </span>
         )}
       </div>
 
       {/* Messages Scroll Container */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-lg py-lg space-y-lg custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col gap-md items-start group animate-fade-in text-left">
+          <div className="flex flex-col gap-4 items-start group animate-fade-in text-left">
             <div className="w-10 h-10 rounded bg-surface-container border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-primary-fixed-dim text-headline-sm" style={{ fontVariationSettings: "'FILL' 0" }}>smart_toy</span>
+              <span className="material-symbols-outlined text-primary-fixed-dim text-lg" style={{ fontVariationSettings: "'FILL' 0" }}>smart_toy</span>
             </div>
-            <div className="flex flex-col gap-xs max-w-2xl">
-              <div className="flex items-center gap-sm">
-                <span className="text-label-caps font-bold text-primary-container">Luminary AI</span>
+            <div className="flex flex-col gap-2 max-w-2xl">
+              <div className="flex items-center gap-3">
+                <span className="text-xs uppercase tracking-wider font-bold text-primary-container">Luminary AI</span>
                 <span className="text-[10px] text-on-surface-variant font-mono">SYSTEM v4.0.2</span>
               </div>
-              <div className="text-body-lg text-on-surface leading-relaxed">
+              <div className="text-sm md:text-base text-on-surface leading-relaxed">
                 Welcome to your secure intelligence workspace. I am ready to analyze your datasets and provide high-fidelity insights.
                 <br /><br />
                 Please check the document repository on the left and type a message below to begin our RAG-enhanced consultation.
@@ -227,13 +227,13 @@ export default function ChatPanel() {
           
           if (isUser) {
             return (
-              <div key={msg.id} className="flex gap-md items-start group justify-end animate-fade-in">
-                <div className="flex flex-col gap-xs max-w-2xl text-right">
-                  <div className="flex items-center gap-sm justify-end">
-                    <span className="text-label-caps font-bold text-primary">You</span>
+              <div key={msg.id} className="flex gap-4 items-start group justify-end animate-fade-in">
+                <div className="flex flex-col gap-2 max-w-2xl text-right">
+                  <div className="flex items-center gap-3 justify-end">
+                    <span className="text-xs uppercase tracking-wider font-bold text-primary">You</span>
                     <span className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wider">User</span>
                   </div>
-                  <div className="text-body-lg text-on-surface leading-relaxed bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-lg break-words text-left">
+                  <div className="text-sm md:text-base text-on-surface leading-relaxed bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-lg break-words text-left">
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </div>
@@ -241,16 +241,16 @@ export default function ChatPanel() {
             );
           } else {
             return (
-              <div key={msg.id} className="flex gap-md items-start group animate-fade-in text-left">
+              <div key={msg.id} className="flex gap-4 items-start group animate-fade-in text-left">
                 <div className="w-10 h-10 rounded bg-surface-container border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-primary-fixed-dim text-headline-sm">smart_toy</span>
+                  <span className="material-symbols-outlined text-primary-fixed-dim text-lg">smart_toy</span>
                 </div>
-                <div className="flex flex-col gap-xs max-w-2xl">
-                  <div className="flex items-center gap-sm">
-                    <span className="text-label-caps font-bold text-primary-container">Luminary AI</span>
+                <div className="flex flex-col gap-2 max-w-2xl">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs uppercase tracking-wider font-bold text-primary-container">Luminary AI</span>
                     <span className="text-[10px] text-on-surface-variant font-mono">SYSTEM v4.0.2</span>
                   </div>
-                  <div className="text-body-lg text-on-surface leading-relaxed">
+                  <div className="text-sm md:text-base text-on-surface leading-relaxed">
                     <p className="whitespace-pre-wrap">
                       {msg.content}
                       {showCursor && <span className="inline-block w-0.5 h-3.5 bg-primary ml-0.5 align-middle cursor-blink" />}
@@ -269,9 +269,9 @@ export default function ChatPanel() {
         })}
 
         {/* Sync Indicator */}
-        <div className="pt-xl flex flex-col items-center opacity-25">
-          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-outline-variant to-transparent mb-lg"></div>
-          <p className="text-label-caps tracking-[0.2em] font-semibold uppercase">Context Synchronized</p>
+        <div className="pt-8 flex flex-col items-center opacity-25">
+          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-outline-variant to-transparent mb-6"></div>
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase">Context Synchronized</p>
         </div>
       </div>
 
