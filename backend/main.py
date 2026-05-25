@@ -11,7 +11,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-load_dotenv("../.env")
+load_dotenv()
 
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,6 +44,11 @@ async def lifespan(app: FastAPI):
     await init_db()
     idx = get_index()
     logger.info(f"FAISS index loaded: {idx.ntotal} vectors")
+    # Pre-warm embedding model to avoid cold-start timeout on first request
+    from services.embeddings import get_model
+    logger.info("Pre-loading sentence-transformer model...")
+    get_model()
+    logger.info("Embedding model ready")
     yield
     logger.info("Luminary shutting down")
 
@@ -265,12 +270,17 @@ async def chat(
                 except Exception:
                     pass
 
-        # After the stream completes, emit the sources event with the top 5 retrieved chunks
-        formatted_sources = [
-            {"filename": c["filename"], "page": c["page_number"]}
+        # After the stream completes, emit the citations event matching frontend SSECitationEvent shape
+        citation_sources = [
+            {
+                "filename": c["filename"],
+                "page_number": c["page_number"],
+                "chunk_text": c["text"][:200],
+                "relevance_score": round(c.get("score", 0), 3),
+            }
             for c in chunks[:5]
         ]
-        yield f"data: {json.dumps({'sources': formatted_sources})}\n\n"
+        yield f"data: {json.dumps({'citations': citation_sources, 'session_id': session_id})}\n\n"
 
         # Then emit [DONE]
         yield "data: [DONE]\n\n"

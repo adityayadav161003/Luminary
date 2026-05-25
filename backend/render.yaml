@@ -17,4 +17,4 @@ services:
       - key: FAISS_INDEX_PATH
         value: ./faiss_store
       - key: DATABASE_URL
-        value: sqlite:///./luminary.db
+        value: sqlite+aiosqlite:///./luminary.db

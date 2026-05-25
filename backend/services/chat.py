@@ -66,7 +66,7 @@ async def stream_chat_response(
                 token = chunk.choices[0].delta.content
                 yield f"data: {json.dumps({'token': token})}\n\n"
 
-        yield f"data: {json.dumps({'done': True})}\n\n"
+        yield "data: [DONE]\n\n"
 
     except Exception as e:
         yield f"data: {json.dumps({'error': str(e)})}\n\n"

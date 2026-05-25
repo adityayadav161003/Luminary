@@ -1,28 +1,11 @@
-/** PDFViewer — react-pdf with zoom, page nav, citation jump. Lazy-loaded for perf. */
-import { useState, useCallback } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+/** PDFViewer — privacy-first placeholder. PDF bytes are processed server-side and never stored. */
 import { useStore } from '../store';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function PDFViewer() {
   const docId = useStore((s) => s.viewerDocId);
-  const page = useStore((s) => s.currentPage);
-  const total = useStore((s) => s.totalPages);
-  const scale = useStore((s) => s.viewerScale);
-  const jump = useStore((s) => s.jumpToPage);
-  const setTotal = useStore((s) => s.setTotalPages);
-  const setScale = useStore((s) => s.setViewerScale);
   const docs = useStore((s) => s.documents);
-  const [pageInput, setPageInput] = useState('');
-  const [err, setErr] = useState(false);
 
   const doc = docs.find((d) => d.doc_id === docId);
-
-  const onLoad = useCallback(({ numPages }: { numPages: number }) => { setTotal(numPages); setErr(false); }, [setTotal]);
-  const go = (p: number) => jump(Math.max(1, Math.min(p, total)));
 
   if (!docId || !doc) {
     return (
@@ -37,37 +20,34 @@ export default function PDFViewer() {
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      {/* Controls bar */}
+      {/* Title bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-1)]">
-        <span className="text-sm font-medium text-[var(--color-ink)] truncate max-w-[180px]">{doc.filename}</span>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <button onClick={() => setScale(scale - 0.15)} disabled={scale <= 0.5} className="p-1 rounded hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-30 transition-colors duration-150">
-              <svg className="w-4 h-4 text-[var(--color-ink-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19.5 12h-15" /></svg>
-            </button>
-            <span className="text-xs text-[var(--color-ink-faint)] w-9 text-center">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(scale + 0.15)} disabled={scale >= 3} className="p-1 rounded hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-30 transition-colors duration-150">
-              <svg className="w-4 h-4 text-[var(--color-ink-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            </button>
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => go(page - 1)} disabled={page <= 1} className="p-1 rounded hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-30">
-              <svg className="w-4 h-4 text-[var(--color-ink-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            </button>
-            <input type="text" value={pageInput} onChange={(e) => setPageInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { const n = parseInt(pageInput); if (!isNaN(n)) go(n); setPageInput(''); }}} placeholder={String(page)} className="w-7 text-center text-xs bg-[var(--color-surface-2)] text-[var(--color-ink)] border border-[var(--color-border)] rounded px-1 py-0.5 focus:outline-none focus:border-[var(--color-accent)]" />
-            <span className="text-xs text-[var(--color-ink-faint)]">/ {total}</span>
-            <button onClick={() => go(page + 1)} disabled={page >= total} className="p-1 rounded hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-30">
-              <svg className="w-4 h-4 text-[var(--color-ink-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-            </button>
-          </div>
+        <span className="text-sm font-medium text-[var(--color-ink)] truncate max-w-[260px]">{doc.filename}</span>
+        <div className="flex items-center gap-2 text-xs text-[var(--color-ink-faint)]">
+          <span className="px-2 py-0.5 rounded border border-[var(--color-border)]">{doc.page_count} pages</span>
+          <span className="px-2 py-0.5 rounded border border-[var(--color-border)]">{doc.chunk_count} chunks</span>
         </div>
       </div>
-      <div className="flex-1 overflow-auto flex justify-center p-4">
-        {err ? <p className="text-sm text-[var(--color-ink-faint)] self-center">PDF preview unavailable — you can still chat about this document</p> : (
-          <Document file="/sample.pdf" onLoadSuccess={onLoad} onLoadError={() => setErr(true)} loading={<div className="w-8 h-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />} noData={<p className="text-sm text-[var(--color-ink-faint)]">No preview</p>}>
-            <Page pageNumber={page} scale={scale} loading={<div className="w-[595px] h-[842px] bg-[var(--color-surface-2)] rounded-lg relative overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.03)] to-transparent animate-[shimmer_1.5s_infinite]" /></div>} className="shadow-2xl rounded-lg overflow-hidden" />
-          </Document>
-        )}
+
+      {/* Privacy-first placeholder */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-8 gap-5">
+        <div className="w-28 h-36 rounded-xl border-2 border-dashed border-[var(--color-border)] flex items-center justify-center bg-[var(--color-surface-2)]/50">
+          <svg className="w-10 h-10 text-[var(--color-ink-faint)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+        </div>
+        <div className="max-w-xs">
+          <p className="text-sm font-medium text-[var(--color-ink)] mb-1.5">{doc.filename}</p>
+          <p className="text-xs text-[var(--color-ink-faint)] leading-relaxed">
+            PDF preview is unavailable — your document is processed privately on the server and never stored. Use the Chat panel to ask questions about it.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-1.5 text-xs text-[var(--color-accent)]">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+            <span>Privacy-first processing</span>
+          </div>
+        </div>
       </div>
     </div>
   );

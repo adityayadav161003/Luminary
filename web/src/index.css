@@ -68,7 +68,4 @@ body {
   border: 1px solid var(--color-border);
 }
 
-/* react-pdf overrides */
-.react-pdf__Page__canvas { max-width: 100% !important; height: auto !important; }
-
 ::selection { background: var(--color-accent-dim); color: var(--color-accent); }

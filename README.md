@@ -6,7 +6,7 @@
 
   <p>
     <a href="#demo"><img src="https://img.shields.io/badge/Demo-Live-brightgreen.svg" alt="Live Demo" /></a>
-    <a href="https://github.com/aditya/IntelliPDFChat/actions"><img src="https://img.shields.io/badge/Build-Passing-blue.svg" alt="Build Status" /></a>
+    <a href="https://github.com/adityayadav161003/Luminary/actions"><img src="https://img.shields.io/badge/Build-Passing-blue.svg" alt="Build Status" /></a>
     <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115.6-009688.svg?logo=fastapi" alt="FastAPI" /></a>
     <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-19.2-61DAFB.svg?logo=react" alt="React" /></a>
     <a href="https://clerk.dev/"><img src="https://img.shields.io/badge/Auth-Clerk-6C47FF.svg" alt="Clerk" /></a>
@@ -175,8 +175,8 @@ Luminary utilizes a highly optimized Retrieval-Augmented Generation (RAG) pipeli
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/IntelliPDFChat.git
-cd IntelliPDFChat
+git clone https://github.com/adityayadav161003/Luminary.git
+cd Luminary
 ```
 
 ### 2. Backend Setup

@@ -64,6 +64,7 @@ async def get_current_user(
             signing_key.key,
             algorithms=["RS256"],
             options={"verify_aud": False},
+            leeway=30,
         )
         user_id = payload.get("sub")
         if not user_id:
